@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bug Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CONFIG — fill these in with your Supabase project details.
+     Project Settings → API → Project URL / anon public key.
+     ============================================================ */
+</style>
+</head>
+<body>
+
+<script>
+  window.CONFIG = {
+    SUPABASE_URL: "YOUR_SUPABASE_URL",      // e.g. https://abcdefgh.supabase.co
+    SUPABASE_ANON_KEY: "YOUR_ANON_KEY"
+  };
+</script>
+
+<style>
+  :root{
+    --bg: #0B0E14;
+    --surface: #131722;
+    --surface-2: #1B2030;
+    --border: #262C3D;
+    --text: #E8EAED;
+    --text-muted: #838BA0;
+    --accent: #5B8DEF;
+    --accent-dim: #2A3E63;
+    --urgent: #FF4463;
+    --urgent-dim: #4A1F2C;
+    --high: #FFA53E;
+    --high-dim: #4A3419;
+    --medium: #5B8DEF;
+    --medium-dim: #1F2C4A;
+    --low: #7C8AA3;
+    --low-dim: #262C3D;
+    --radius: 10px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* subtle grid texture, like a work-order pad */
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shell{
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  header.top{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  .brand__mark{
+    width: 30px; height:30px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), #3A5FC4);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font-mono);
+    font-weight:600;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink:0;
+  }
+  .brand__text{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.01em;
+  }
+  .brand__sub{
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-top: 1px;
+  }
+
+  .tabs{
+    display:flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .tab{
+    border:none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tab[aria-selected="true"]{
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .tab:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .view{ display:none; }
+  .view.active{ display:block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform: translateY(4px);} to{ opacity:1; transform:none; } }
+
+  /* ---------------- Submit view ---------------- */
+
+  .panel{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .panel h1{
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .panel p.lede{
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+    line-height: 1.5;
+  }
+
+  .field{ margin-bottom: 20px; }
+  .field label{
+    display:block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  textarea{
+    width:100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+  }
+  textarea:focus-visible, input:focus-visible, select:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  textarea::placeholder{ color: #4A5268; }
+
+  .priority-picker{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .priority-opt{
+    position: relative;
+    cursor: pointer;
+  }
+  .priority-opt input{
+    position:absolute;
+    opacity:0;
+    width:100%; height:100%;
+    margin:0;
+    cursor:pointer;
+  }
+  .priority-opt .chip{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap: 6px;
+    padding: 12px 4px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    transition: all .15s ease;
+  }
+  .priority-opt .dot{ width:8px; height:8px; border-radius:50%; background: var(--text-muted); }
+  .priority-opt[data-p="urgent"] .dot{ background: var(--urgent); }
+  .priority-opt[data-p="high"] .dot{ background: var(--high); }
+  .priority-opt[data-p="medium"] .dot{ background: var(--medium); }
+  .priority-opt[data-p="low"] .dot{ background: var(--low); }
+
+  .priority-opt input:checked + .chip{
+    color: var(--text);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .priority-opt[data-p="urgent"] input:checked + .chip{ border-color: var(--urgent); background: var(--urgent-dim); }
+  .priority-opt[data-p="high"] input:checked + .chip{ border-color: var(--high); background: var(--high-dim); }
+  .priority-opt[data-p="urgent"] input:checked + .chip .dot{ box-shadow: 0 0 0 4px rgba(255,68,99,0.18); }
+
+  .dropzone{
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    padding: 20px;
+    text-align:center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{ border-color: var(--accent); background: var(--accent-dim); }
+  .dropzone input{ display:none; }
+  .dropzone .dz-label{
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .dropzone .dz-label strong{ color: var(--text); }
+
+  .preview-wrap{
+    display:none;
+    margin-top: 12px;
+    position: relative;
+  }
+  .preview-wrap.show{ display:block; }
+  .preview-wrap img{
+    max-height: 180px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display:block;
+  }
+  .preview-wrap button{
+    position:absolute;
+    top:8px; right:8px;
+    background: rgba(11,14,20,0.85);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width:26px; height:26px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size: 13px;
+    line-height:1;
+  }
+
+  .submit-btn{
+    width:100%;
+    background: var(--accent);
+    color: #fff;
+    border:none;
+    border-radius: 8px;
+    padding: 13px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor:pointer;
+    transition: background .15s ease, opacity .15s ease;
+  }
+  .submit-btn:hover{ background: #4A7AE0; }
+  .submit-btn:disabled{ opacity: 0.5; cursor: default; }
+
+  .err{
+    color: var(--urgent);
+    font-size: 13px;
+    margin-top: -8px;
+    margin-bottom: 16px;
+    display:none;
+  }
+  .err.show{ display:block; }
+
+  .success{
+    text-align:center;
+    padding: 20px 0 4px;
+  }
+  .success .ticket-id{
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 12px 0 6px;
+  }
+  .success p{ color: var(--text-muted); font-size: 14px; margin: 0 0 24px; }
+  .success .again{
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor:pointer;
+  }
+
+  /* ---------------- Queue view ---------------- */
+
+  .queue-head{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .queue-head h1{
+    font-family: var(--font-display);
+    font-size: 20px;
+    margin:0;
+  }
+  .queue-count{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .filters{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .filter-chip{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor:pointer;
+  }
+  .filter-chip.active{ color: var(--text); border-color: var(--accent); background: var(--accent-dim); }
+  .filter-chip[data-p="urgent"].active{ border-color: var(--urgent); background: var(--urgent-dim); }
+  .filter-chip[data-p="high"].active{ border-color: var(--high); background: var(--high-dim); }
+
+  select.status-select{
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor:pointer;
+  }
+
+  .ticket-list{ display:flex; flex-direction:column; gap: 12px; }
+
+  .ticket{
+    display:flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .ticket__stub{
+    width: 40px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position: relative;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: #0B0E14;
+  }
+  .ticket__stub::after{
+    content:"";
+    position:absolute;
+    right:-1px; top:0; bottom:0;
+    width:0;
+    border-right: 2px dashed rgba(0,0,0,0.25);
+  }
+  .ticket[data-p="urgent"] .ticket__stub{ background: var(--urgent); }
+  .ticket[data-p="high"] .ticket__stub{ background: var(--high); }
+  .ticket[data-p="medium"] .ticket__stub{ background: var(--medium); }
+  .ticket[data-p="low"] .ticket__stub{ background: var(--low); }
+
+  .ticket__body{
+    flex:1;
+    padding: 14px 16px;
+    min-width:0;
+  }
+  .ticket__meta{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .ticket__id{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .ticket__time{
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .ticket__desc{
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 10px;
+    color: var(--text);
+    word-break: break-word;
+  }
+  .ticket__thumb{
+    max-width: 220px;
+    max-height: 140px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    display:block;
+    cursor: zoom-in;
+  }
+  .ticket__footer{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .empty{
+    text-align:center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+  }
+  .empty strong{ color: var(--text); display:block; margin-bottom: 6px; font-family: var(--font-display); font-size: 16px; }
+
+  .lightbox{
+    display:none;
+    position: fixed; inset:0;
+    background: rgba(6,8,12,0.9);
+    z-index: 50;
+    align-items:center;
+    justify-content:center;
+    padding: 30px;
+    cursor: zoom-out;
+  }
+  .lightbox.show{ display:flex; }
+  .lightbox img{ max-width:100%; max-height:100%; border-radius: 8px; }
+
+  @media (max-width: 480px){
+    .priority-picker{ grid-template-columns: repeat(2,1fr); }
+    .shell{ padding: 20px 14px 60px; }
+  }
+</style>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="brand__mark">BD</div>
+      <div>
+        <div class="brand__text">Bug Desk</div>
+        <div class="brand__sub" id="subline">flag it, we'll fix it</div>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-submit" role="tab" aria-selected="true">Report a bug</button>
+      <button class="tab" id="tab-queue" role="tab" aria-selected="false">Queue</button>
+    </div>
+  </header>
+
+  <!-- SUBMIT VIEW -->
+  <section class="view active" id="view-submit">
+    <div class="panel" id="submit-panel">
+      <h1>What's broken?</h1>
+      <p class="lede">Drop a screenshot and a quick description. Mark it Urgent only if it's actually blocking something right now.</p>
+
+      <form id="bug-form">
+        <div class="field">
+          <label for="desc">What's happening</label>
+          <textarea id="desc" placeholder="e.g. Checkout button does nothing on mobile Safari" required></textarea>
+        </div>
+
+        <div class="field">
+          <label>Priority</label>
+          <div class="priority-picker">
+            <label class="priority-opt" data-p="low">
+              <input type="radio" name="priority" value="low">
+              <span class="chip"><span class="dot"></span>Low</span>
+            </label>
+            <label class="priority-opt" data-p="medium">
+              <input type="radio" name="priority" value="medium" checked>
+              <span class="chip"><span class="dot"></span>Medium</span>
+            </label>
+            <label class="priority-opt" data-p="high">
+              <input type="radio" name="priority" value="high">
+              <span class="chip"><span class="dot"></span>High</span>
+            </label>
+            <label class="priority-opt" data-p="urgent">
+              <input type="radio" name="priority" value="urgent">
+              <span class="chip"><span class="dot"></span>Urgent</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Screenshot</label>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="file-input" accept="image/*">
+            <div class="dz-label" id="dz-label"><strong>Click to upload</strong> or drag an image here</div>
+          </div>
+          <div class="preview-wrap" id="preview-wrap">
+            <img id="preview-img" alt="Screenshot preview">
+            <button type="button" id="remove-img" aria-label="Remove image">✕</button>
+          </div>
+        </div>
+
+        <div class="err" id="form-err"></div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">File ticket</button>
+      </form>
+    </div>
+
+    <div class="panel success" id="success-panel" style="display:none;">
+      <div style="font-size:13px;color:var(--text-muted);font-family:var(--font-mono);">TICKET FILED</div>
+      <div class="ticket-id" id="new-ticket-id">BD-0000</div>
+      <p id="new-ticket-priority">Priority: Medium</p>
+      <button class="again" id="file-another">File another</button>
+    </div>
+  </section>
+
+  <!-- QUEUE VIEW -->
+  <section class="view" id="view-queue">
+    <div class="queue-head">
+      <h1>The queue</h1>
+      <span class="queue-count" id="queue-count">0 open</span>
+    </div>
+    <div class="filters" id="filters">
+      <button class="filter-chip active" data-p="all">ALL</button>
+      <button class="filter-chip" data-p="urgent">URGENT</button>
+      <button class="filter-chip" data-p="high">HIGH</button>
+      <button class="filter-chip" data-p="medium">MEDIUM</button>
+      <button class="filter-chip" data-p="low">LOW</button>
+    </div>
+    <div class="ticket-list" id="ticket-list"></div>
+  </section>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightbox-img" alt=""></div>
+
+<script>
+(function(){
+  const CFG = window.CONFIG;
+  const REST = CFG.SUPABASE_URL + "/rest/v1/bugs";
+  const STORAGE = CFG.SUPABASE_URL + "/storage/v1/object/screenshots/";
+  const STORAGE_PUBLIC = CFG.SUPABASE_URL + "/storage/v1/object/public/screenshots/";
+  const headers = {
+    "apikey": CFG.SUPABASE_ANON_KEY,
+    "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY
+  };
+  const configured = CFG.SUPABASE_URL && !CFG.SUPABASE_URL.includes("YOUR_");
+
+  // ---------- Tabs ----------
+  const tabSubmit = document.getElementById('tab-submit');
+  const tabQueue = document.getElementById('tab-queue');
+  const viewSubmit = document.getElementById('view-submit');
+  const viewQueue = document.getElementById('view-queue');
+
+  function showView(name){
+    const isQueue = name === 'queue';
+    tabSubmit.setAttribute('aria-selected', String(!isQueue));
+    tabQueue.setAttribute('aria-selected', String(isQueue));
+    viewSubmit.classList.toggle('active', !isQueue);
+    viewQueue.classList.toggle('active', isQueue);
+    if(isQueue) loadTickets();
+  }
+  tabSubmit.addEventListener('click', () => showView('submit'));
+  tabQueue.addEventListener('click', () => showView('queue'));
+
+  if(window.location.hash === '#queue'){ showView('queue'); }
+
+  // ---------- Submit form ----------
+  const form = document.getElementById('bug-form');
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg = document.getElementById('preview-img');
+  const removeImgBtn = document.getElementById('remove-img');
+  const dzLabel = document.getElementById('dz-label');
+  const formErr = document.getElementById('form-err');
+  const submitBtn = document.getElementById('submit-btn');
+  let selectedFile = null;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if(fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+  function handleFile(file){
+    if(!file.type.startsWith('image/')) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewWrap.classList.add('show');
+      dzLabel.innerHTML = '<strong>' + file.name + '</strong> selected';
+    };
+    reader.readAsDataURL(file);
+  }
+  removeImgBtn.addEventListener('click', () => {
+    selectedFile = null;
+    fileInput.value = '';
+    previewWrap.classList.remove('show');
+    dzLabel.innerHTML = '<strong>Click to upload</strong> or drag an image here';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    formErr.classList.remove('show');
+
+    if(!configured){
+      formErr.textContent = "This Bug Desk isn't connected to a database yet — see the setup notes in the file.";
+      formErr.classList.add('show');
+      return;
+    }
+
+    const desc = document.getElementById('desc').value.trim();
+    const priority = form.querySelector('input[name="priority"]:checked').value;
+    if(!desc){ return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Filing…";
+
+    try{
+      let imageUrl = null;
+      if(selectedFile){
+        const ext = selectedFile.name.split('.').pop() || 'png';
+        const fname = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+        const uploadRes = await fetch(STORAGE + fname, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': selectedFile.type },
+          body: selectedFile
+        });
+        if(!uploadRes.ok) throw new Error('Image upload failed');
+        imageUrl = STORAGE_PUBLIC + fname;
+      }
+
+      const insertRes = await fetch(REST, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ description: desc, priority, image_url: imageUrl })
+      });
+      if(!insertRes.ok) throw new Error('Could not file ticket');
+      const [created] = await insertRes.json();
+
+      document.getElementById('submit-panel').style.display = 'none';
+      document.getElementById('success-panel').style.display = 'block';
+      document.getElementById('new-ticket-id').textContent = ticketId(created);
+      document.getElementById('new-ticket-priority').textContent = 'Priority: ' + capitalize(priority);
+
+    }catch(err){
+      formErr.textContent = "Something went wrong — " + err.message + ". Try again?";
+      formErr.classList.add('show');
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = "File ticket";
+    }
+  });
+
+  document.getElementById('file-another').addEventListener('click', () => {
+    form.reset();
+    selectedFile = null;
+    previewWrap.classList.remove('show');
+    dzLabel.innerHTML = '<strong>Click to upload</strong> or drag an image here';
+    document.getElementById('submit-panel').style.display = 'block';
+    document.getElementById('success-panel').style.display = 'none';
+  });
+
+  // ---------- Queue ----------
+  const ticketList = document.getElementById('ticket-list');
+  const queueCount = document.getElementById('queue-count');
+  const filters = document.getElementById('filters');
+  let activeFilter = 'all';
+  let allTickets = [];
+
+  filters.addEventListener('click', e => {
+    const btn = e.target.closest('.filter-chip');
+    if(!btn) return;
+    activeFilter = btn.dataset.p;
+    [...filters.children].forEach(c => c.classList.toggle('active', c === btn));
+    render();
+  });
+
+  const priorityRank = { urgent: 0, high: 1, medium: 2, low: 3 };
+
+  async function loadTickets(){
+    if(!configured){
+      ticketList.innerHTML = '<div class="empty"><strong>Not connected yet</strong>Add your Supabase URL and anon key at the top of this file to start collecting tickets.</div>';
+      queueCount.textContent = '';
+      return;
+    }
+    ticketList.innerHTML = '<div class="empty">Loading…</div>';
+    try{
+      const res = await fetch(REST + '?select=*&order=created_at.desc', { headers });
+      if(!res.ok) throw new Error('fetch failed');
+      allTickets = await res.json();
+      render();
+    }catch(err){
+      ticketList.innerHTML = '<div class="empty"><strong>Couldn\'t load the queue</strong>Check your Supabase config and RLS policies.</div>';
+    }
+  }
+
+  function render(){
+    let list = allTickets.filter(t => activeFilter === 'all' || t.priority === activeFilter);
+    list.sort((a,b) => (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9) || new Date(b.created_at) - new Date(a.created_at));
+
+    const openCount = allTickets.filter(t => t.status !== 'fixed').length;
+    queueCount.textContent = openCount + ' open';
+
+    if(list.length === 0){
+      ticketList.innerHTML = '<div class="empty"><strong>Clear board</strong>No tickets match this filter.</div>';
+      return;
+    }
+
+    ticketList.innerHTML = list.map(t => `
+      <div class="ticket" data-p="${t.priority}">
+        <div class="ticket__stub">${t.priority.toUpperCase()}</div>
+        <div class="ticket__body">
+          <div class="ticket__meta">
+            <span class="ticket__id">${ticketId(t)}</span>
+            <span class="ticket__time">${timeAgo(t.created_at)}</span>
+          </div>
+          <p class="ticket__desc">${escapeHtml(t.description)}</p>
+          ${t.image_url ? `<img class="ticket__thumb" src="${t.image_url}" data-full="${t.image_url}" alt="Screenshot">` : ''}
+          <div class="ticket__footer">
+            <select class="status-select" data-id="${t.id}">
+              <option value="new" ${t.status==='new'?'selected':''}>New</option>
+              <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In progress</option>
+              <option value="fixed" ${t.status==='fixed'?'selected':''}>Fixed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  ticketList.addEventListener('change', async e => {
+    if(!e.target.classList.contains('status-select')) return;
+    const id = e.target.dataset.id;
+    const status = e.target.value;
+    try{
+      await fetch(REST + '?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const t = allTickets.find(x => x.id === id);
+      if(t) t.status = status;
+      render();
+    }catch(err){}
+  });
+
+  ticketList.addEventListener('click', e => {
+    const img = e.target.closest('.ticket__thumb');
+    if(!img) return;
+    document.getElementById('lightbox-img').src = img.dataset.full;
+    document.getElementById('lightbox').classList.add('show');
+  });
+  document.getElementById('lightbox').addEventListener('click', function(){ this.classList.remove('show'); });
+
+  // ---------- helpers ----------
+  function ticketId(t){
+    return 'BD-' + (t.id || '').toString().replace(/-/g,'').slice(0,4).toUpperCase();
+  }
+  function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function timeAgo(iso){
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if(diff < 60) return 'just now';
+    if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  if(!configured){
+    document.getElementById('subline').textContent = 'not connected — see setup notes';
+  }
+})();
+</script>
+</body>
+</html>
