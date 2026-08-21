@@ -10,17 +10,17 @@
 <style>
   /* ============================================================
      CONFIG — fill these in with your Supabase project details.
-     Project Settings → API → Project URL / anon public key.
+     Project Settings → API → Project URL / anon public/publishable key.
      ============================================================ */
 </style>
 </head>
 <body>
 
 <script>
- window.CONFIG = {
-  SUPABASE_URL: "https://vcxxmqivfecwikcnqlij.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_fyphIDWWN4gfKvTIZDvufg_ySamsDNO"
-};
+  window.CONFIG = {
+    SUPABASE_URL: "https://vcxxmqivfecwikcnqlij.supabase.co",
+    SUPABASE_ANON_KEY: "sb_publishable_fyphIDWWN4gfKvTIZDvufg_ySamsDNO"
+  };
 </script>
 
 <style>
@@ -57,7 +57,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* subtle grid texture, like a work-order pad */
   body::before{
     content:"";
     position: fixed; inset:0;
@@ -87,11 +86,7 @@
     flex-wrap: wrap;
   }
 
-  .brand{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-  }
+  .brand{ display:flex; align-items:center; gap: 10px; }
   .brand__mark{
     width: 30px; height:30px;
     border-radius: 7px;
@@ -136,17 +131,12 @@
     cursor: pointer;
     transition: background .15s ease, color .15s ease;
   }
-  .tab[aria-selected="true"]{
-    background: var(--surface-2);
-    color: var(--text);
-  }
+  .tab[aria-selected="true"]{ background: var(--surface-2); color: var(--text); }
   .tab:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .view{ display:none; }
   .view.active{ display:block; animation: fadeIn .25s ease; }
   @keyframes fadeIn{ from{ opacity:0; transform: translateY(4px);} to{ opacity:1; transform:none; } }
-
-  /* ---------------- Submit view ---------------- */
 
   .panel{
     background: var(--surface);
@@ -196,22 +186,9 @@
   }
   textarea::placeholder{ color: #4A5268; }
 
-  .priority-picker{
-    display:grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-  .priority-opt{
-    position: relative;
-    cursor: pointer;
-  }
-  .priority-opt input{
-    position:absolute;
-    opacity:0;
-    width:100%; height:100%;
-    margin:0;
-    cursor:pointer;
-  }
+  .priority-picker{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .priority-opt{ position: relative; cursor: pointer; }
+  .priority-opt input{ position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer; }
   .priority-opt .chip{
     display:flex;
     flex-direction: column;
@@ -234,11 +211,7 @@
   .priority-opt[data-p="medium"] .dot{ background: var(--medium); }
   .priority-opt[data-p="low"] .dot{ background: var(--low); }
 
-  .priority-opt input:checked + .chip{
-    color: var(--text);
-    border-color: var(--accent);
-    background: var(--accent-dim);
-  }
+  .priority-opt input:checked + .chip{ color: var(--text); border-color: var(--accent); background: var(--accent-dim); }
   .priority-opt[data-p="urgent"] input:checked + .chip{ border-color: var(--urgent); background: var(--urgent-dim); }
   .priority-opt[data-p="high"] input:checked + .chip{ border-color: var(--high); background: var(--high-dim); }
   .priority-opt[data-p="urgent"] input:checked + .chip .dot{ box-shadow: 0 0 0 4px rgba(255,68,99,0.18); }
@@ -254,27 +227,14 @@
   }
   .dropzone:hover, .dropzone.drag{ border-color: var(--accent); background: var(--accent-dim); }
   .dropzone input{ display:none; }
-  .dropzone .dz-label{
-    font-size: 13px;
-    color: var(--text-muted);
-  }
+  .dropzone .dz-label{ font-size: 13px; color: var(--text-muted); }
   .dropzone .dz-label strong{ color: var(--text); }
 
-  .preview-wrap{
-    display:none;
-    margin-top: 12px;
-    position: relative;
-  }
+  .preview-wrap{ display:none; margin-top: 12px; position: relative; }
   .preview-wrap.show{ display:block; }
-  .preview-wrap img{
-    max-height: 180px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    display:block;
-  }
+  .preview-wrap img{ max-height: 180px; border-radius: 8px; border: 1px solid var(--border); display:block; }
   .preview-wrap button{
-    position:absolute;
-    top:8px; right:8px;
+    position:absolute; top:8px; right:8px;
     background: rgba(11,14,20,0.85);
     border: 1px solid var(--border);
     color: var(--text);
@@ -301,19 +261,10 @@
   .submit-btn:hover{ background: #4A7AE0; }
   .submit-btn:disabled{ opacity: 0.5; cursor: default; }
 
-  .err{
-    color: var(--urgent);
-    font-size: 13px;
-    margin-top: -8px;
-    margin-bottom: 16px;
-    display:none;
-  }
+  .err{ color: var(--urgent); font-size: 13px; margin-top: -8px; margin-bottom: 16px; display:none; }
   .err.show{ display:block; }
 
-  .success{
-    text-align:center;
-    padding: 20px 0 4px;
-  }
+  .success{ text-align:center; padding: 20px 0 4px; }
   .success .ticket-id{
     font-family: var(--font-mono);
     font-size: 28px;
@@ -333,8 +284,6 @@
     cursor:pointer;
   }
 
-  /* ---------------- Queue view ---------------- */
-
   .queue-head{
     display:flex;
     align-items:center;
@@ -343,23 +292,10 @@
     flex-wrap: wrap;
     gap: 10px;
   }
-  .queue-head h1{
-    font-family: var(--font-display);
-    font-size: 20px;
-    margin:0;
-  }
-  .queue-count{
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  .queue-head h1{ font-family: var(--font-display); font-size: 20px; margin:0; }
+  .queue-count{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
 
-  .filters{
-    display:flex;
-    gap: 8px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-  }
+  .filters{ display:flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
   .filter-chip{
     background: var(--surface);
     border: 1px solid var(--border);
@@ -396,7 +332,9 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
+    transition: opacity .2s ease, transform .2s ease;
   }
+  .ticket.removing{ opacity: 0; transform: scale(0.98); }
   .ticket__stub{
     width: 40px;
     flex-shrink:0;
@@ -424,34 +362,11 @@
   .ticket[data-p="medium"] .ticket__stub{ background: var(--medium); }
   .ticket[data-p="low"] .ticket__stub{ background: var(--low); }
 
-  .ticket__body{
-    flex:1;
-    padding: 14px 16px;
-    min-width:0;
-  }
-  .ticket__meta{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  .ticket__id{
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .ticket__time{
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .ticket__desc{
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 0 0 10px;
-    color: var(--text);
-    word-break: break-word;
-  }
+  .ticket__body{ flex:1; padding: 14px 16px; min-width:0; }
+  .ticket__meta{ display:flex; align-items:center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .ticket__id{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .ticket__time{ font-size: 11px; color: var(--text-muted); }
+  .ticket__desc{ font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: var(--text); word-break: break-word; }
   .ticket__thumb{
     max-width: 220px;
     max-height: 140px;
@@ -466,7 +381,24 @@
     align-items:center;
     justify-content: space-between;
     gap: 8px;
+    flex-wrap: wrap;
   }
+  .ticket__actions{ display:flex; align-items:center; gap: 8px; }
+
+  .delete-btn{
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .delete-btn:hover{ border-color: var(--urgent); color: var(--urgent); background: var(--urgent-dim); }
+  .delete-btn.confirming{ border-color: var(--urgent); color: #fff; background: var(--urgent); }
 
   .empty{
     text-align:center;
@@ -643,17 +575,61 @@
   });
   fileInput.addEventListener('change', () => { if(fileInput.files[0]) handleFile(fileInput.files[0]); });
 
-  function handleFile(file){
-    if(!file.type.startsWith('image/')) return;
-    selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = e => {
-      previewImg.src = e.target.result;
-      previewWrap.classList.add('show');
-      dzLabel.innerHTML = '<strong>' + file.name + '</strong> selected';
-    };
-    reader.readAsDataURL(file);
+  const MAX_DIM = 1600;
+  const JPEG_QUALITY = 0.72;
+
+  function compressImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read image'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not decode image'));
+        img.onload = () => {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if(w > maxDim || h > maxDim){
+            if(w >= h){ h = Math.round(h * maxDim / w); w = maxDim; }
+            else{ w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => {
+            if(!blob){ reject(new Error('Compression failed')); return; }
+            resolve(blob);
+          }, 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
+
+  function formatKB(bytes){ return Math.max(1, Math.round(bytes / 1024)) + ' KB'; }
+
+  async function handleFile(file){
+    if(!file.type.startsWith('image/')) return;
+    const originalSize = file.size;
+    dzLabel.innerHTML = '<strong>Compressing…</strong>';
+    try{
+      const compressed = await compressImage(file, MAX_DIM, JPEG_QUALITY);
+      selectedFile = compressed;
+      const url = URL.createObjectURL(compressed);
+      previewImg.src = url;
+      previewWrap.classList.add('show');
+      dzLabel.innerHTML = '<strong>' + formatKB(compressed.size) + '</strong> (was ' + formatKB(originalSize) + ') — ready to send';
+    }catch(err){
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewImg.src = e.target.result;
+        previewWrap.classList.add('show');
+        dzLabel.innerHTML = '<strong>' + file.name + '</strong> selected';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   removeImgBtn.addEventListener('click', () => {
     selectedFile = null;
     fileInput.value = '';
@@ -681,11 +657,11 @@
     try{
       let imageUrl = null;
       if(selectedFile){
-        const ext = selectedFile.name.split('.').pop() || 'png';
+        const ext = selectedFile.type === 'image/jpeg' ? 'jpg' : (selectedFile.name ? selectedFile.name.split('.').pop() : 'png');
         const fname = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
         const uploadRes = await fetch(STORAGE + fname, {
           method: 'POST',
-          headers: { ...headers, 'Content-Type': selectedFile.type },
+          headers: { ...headers, 'Content-Type': selectedFile.type || 'image/jpeg' },
           body: selectedFile
         });
         if(!uploadRes.ok) throw new Error('Image upload failed');
@@ -770,7 +746,7 @@
     }
 
     ticketList.innerHTML = list.map(t => `
-      <div class="ticket" data-p="${t.priority}">
+      <div class="ticket" data-p="${t.priority}" data-id="${t.id}">
         <div class="ticket__stub">${t.priority.toUpperCase()}</div>
         <div class="ticket__body">
           <div class="ticket__meta">
@@ -785,6 +761,9 @@
               <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In progress</option>
               <option value="fixed" ${t.status==='fixed'?'selected':''}>Fixed</option>
             </select>
+            <div class="ticket__actions">
+              <button type="button" class="delete-btn" data-id="${t.id}" data-image="${t.image_url || ''}">Delete</button>
+            </div>
           </div>
         </div>
       </div>
@@ -807,15 +786,61 @@
     }catch(err){}
   });
 
-  ticketList.addEventListener('click', e => {
+  // Delete requires a second click within 3s to confirm, no dialog needed.
+  ticketList.addEventListener('click', async e => {
     const img = e.target.closest('.ticket__thumb');
-    if(!img) return;
-    document.getElementById('lightbox-img').src = img.dataset.full;
-    document.getElementById('lightbox').classList.add('show');
+    if(img){
+      document.getElementById('lightbox-img').src = img.dataset.full;
+      document.getElementById('lightbox').classList.add('show');
+      return;
+    }
+
+    const delBtn = e.target.closest('.delete-btn');
+    if(!delBtn) return;
+
+    if(!delBtn.classList.contains('confirming')){
+      delBtn.classList.add('confirming');
+      delBtn.textContent = 'Confirm delete?';
+      delBtn.dataset.confirmTimer = setTimeout(() => {
+        delBtn.classList.remove('confirming');
+        delBtn.textContent = 'Delete';
+      }, 3000);
+      return;
+    }
+
+    clearTimeout(delBtn.dataset.confirmTimer);
+    const id = delBtn.dataset.id;
+    const imageUrl = delBtn.dataset.image;
+    const ticketEl = delBtn.closest('.ticket');
+    delBtn.disabled = true;
+    delBtn.textContent = 'Deleting…';
+
+    try{
+      await fetch(REST + '?id=eq.' + id, { method: 'DELETE', headers });
+
+      if(imageUrl){
+        const fname = imageUrl.split('/screenshots/')[1];
+        if(fname){
+          await fetch(STORAGE + fname, { method: 'DELETE', headers }).catch(() => {});
+        }
+      }
+
+      allTickets = allTickets.filter(t => t.id !== id);
+      if(ticketEl){
+        ticketEl.classList.add('removing');
+        setTimeout(() => render(), 200);
+      } else {
+        render();
+      }
+    }catch(err){
+      delBtn.disabled = false;
+      delBtn.classList.remove('confirming');
+      delBtn.textContent = 'Delete';
+    }
   });
+
   document.getElementById('lightbox').addEventListener('click', function(){ this.classList.remove('show'); });
 
-  // ---------- helpers ----------
   function ticketId(t){
     return 'BD-' + (t.id || '').toString().replace(/-/g,'').slice(0,4).toUpperCase();
   }
