@@ -28,9 +28,12 @@
     --bg: #0B0E14;
     --surface: #131722;
     --surface-2: #1B2030;
+    --surface-3: #202742;
     --border: #262C3D;
+    --border-soft: #1B2030;
     --text: #E8EAED;
     --text-muted: #838BA0;
+    --text-faint: #545C70;
     --accent: #5B8DEF;
     --accent-dim: #2A3E63;
     --urgent: #FF4463;
@@ -41,7 +44,9 @@
     --medium-dim: #1F2C4A;
     --low: #7C8AA3;
     --low-dim: #262C3D;
+    --success: #34D399;
     --radius: 10px;
+    --shadow-panel: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.4);
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
@@ -64,7 +69,7 @@
       linear-gradient(var(--border) 1px, transparent 1px),
       linear-gradient(90deg, var(--border) 1px, transparent 1px);
     background-size: 48px 48px;
-    opacity: 0.06;
+    opacity: 0.05;
     pointer-events: none;
     z-index: 0;
   }
@@ -81,15 +86,15 @@
     display:flex;
     align-items:center;
     justify-content: space-between;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     gap: 12px;
     flex-wrap: wrap;
   }
 
   .brand{ display:flex; align-items:center; gap: 10px; }
   .brand__mark{
-    width: 30px; height:30px;
-    border-radius: 7px;
+    width: 32px; height:32px;
+    border-radius: 8px;
     background: linear-gradient(135deg, var(--accent), #3A5FC4);
     display:flex; align-items:center; justify-content:center;
     font-family: var(--font-mono);
@@ -97,6 +102,7 @@
     font-size: 13px;
     color: #fff;
     flex-shrink:0;
+    box-shadow: 0 2px 8px -2px rgba(91,141,239,0.5);
   }
   .brand__text{
     font-family: var(--font-display);
@@ -109,7 +115,38 @@
     color: var(--text-muted);
     font-family: var(--font-mono);
     margin-top: 1px;
+    display:flex;
+    align-items:center;
+    gap: 6px;
   }
+  .live-dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--success);
+    display:inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .header-actions{ display:flex; align-items:center; gap: 10px; }
+
+  .bell-btn{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 999px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap: 6px;
+    transition: all .15s ease;
+  }
+  .bell-btn:hover{ border-color: var(--accent); color: var(--text); }
+  .bell-btn.enabled{ color: var(--success); border-color: var(--success); }
 
   .tabs{
     display:flex;
@@ -120,6 +157,7 @@
     padding: 3px;
   }
   .tab{
+    position: relative;
     border:none;
     background: transparent;
     color: var(--text-muted);
@@ -133,6 +171,20 @@
   }
   .tab[aria-selected="true"]{ background: var(--surface-2); color: var(--text); }
   .tab:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-badge{
+    position:absolute;
+    top: -4px; right: -2px;
+    background: var(--urgent);
+    color:#fff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight:700;
+    min-width: 16px; height:16px;
+    border-radius: 999px;
+    display:flex; align-items:center; justify-content:center;
+    padding: 0 3px;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
 
   .view{ display:none; }
   .view.active{ display:block; animation: fadeIn .25s ease; }
@@ -143,6 +195,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 28px;
+    box-shadow: var(--shadow-panel);
   }
   .panel h1{
     font-family: var(--font-display);
@@ -179,12 +232,14 @@
     resize: vertical;
     min-height: 90px;
     line-height: 1.5;
+    transition: border-color .15s ease;
   }
+  textarea:hover{ border-color: #333B52; }
   textarea:focus-visible, input:focus-visible, select:focus-visible{
     outline: 2px solid var(--accent);
     outline-offset: 1px;
   }
-  textarea::placeholder{ color: #4A5268; }
+  textarea::placeholder{ color: var(--text-faint); }
 
   .priority-picker{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .priority-opt{ position: relative; cursor: pointer; }
@@ -205,6 +260,7 @@
     color: var(--text-muted);
     transition: all .15s ease;
   }
+  .priority-opt:hover .chip{ border-color: #333B52; }
   .priority-opt .dot{ width:8px; height:8px; border-radius:50%; background: var(--text-muted); }
   .priority-opt[data-p="urgent"] .dot{ background: var(--urgent); }
   .priority-opt[data-p="high"] .dot{ background: var(--high); }
@@ -256,21 +312,32 @@
     font-weight: 600;
     font-size: 14px;
     cursor:pointer;
-    transition: background .15s ease, opacity .15s ease;
+    transition: background .15s ease, opacity .15s ease, transform .1s ease;
   }
   .submit-btn:hover{ background: #4A7AE0; }
+  .submit-btn:active{ transform: scale(0.99); }
   .submit-btn:disabled{ opacity: 0.5; cursor: default; }
 
   .err{ color: var(--urgent); font-size: 13px; margin-top: -8px; margin-bottom: 16px; display:none; }
   .err.show{ display:block; }
 
-  .success{ text-align:center; padding: 20px 0 4px; }
+  .success{ text-align:center; padding: 24px 0 4px; }
+  .success .check-badge{
+    width: 48px; height:48px;
+    border-radius: 50%;
+    background: rgba(52,211,153,0.12);
+    border: 1.5px solid var(--success);
+    color: var(--success);
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 14px;
+    font-size: 22px;
+  }
   .success .ticket-id{
     font-family: var(--font-mono);
     font-size: 28px;
     font-weight: 600;
     color: var(--accent);
-    margin: 12px 0 6px;
+    margin: 4px 0 6px;
   }
   .success p{ color: var(--text-muted); font-size: 14px; margin: 0 0 24px; }
   .success .again{
@@ -282,18 +349,22 @@
     font-weight: 600;
     font-size: 13px;
     cursor:pointer;
+    transition: border-color .15s ease;
   }
+  .success .again:hover{ border-color: var(--accent); }
 
   .queue-head{
     display:flex;
     align-items:center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
     gap: 10px;
   }
   .queue-head h1{ font-family: var(--font-display); font-size: 20px; margin:0; }
+  .queue-meta{ display:flex; align-items:center; gap:10px; }
   .queue-count{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .refresh-note{ font-size: 11px; color: var(--text-faint); }
 
   .filters{ display:flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
   .filter-chip{
@@ -307,7 +378,13 @@
     padding: 6px 12px;
     border-radius: 999px;
     cursor:pointer;
+    transition: all .15s ease;
+    display:flex;
+    align-items:center;
+    gap: 5px;
   }
+  .filter-chip:hover{ border-color: #333B52; }
+  .filter-chip .count{ opacity: 0.6; }
   .filter-chip.active{ color: var(--text); border-color: var(--accent); background: var(--accent-dim); }
   .filter-chip[data-p="urgent"].active{ border-color: var(--urgent); background: var(--urgent-dim); }
   .filter-chip[data-p="high"].active{ border-color: var(--high); background: var(--high-dim); }
@@ -322,7 +399,9 @@
     padding: 6px 10px;
     border-radius: 6px;
     cursor:pointer;
+    transition: border-color .15s ease;
   }
+  select.status-select:hover{ border-color: #333B52; }
 
   .ticket-list{ display:flex; flex-direction:column; gap: 12px; }
 
@@ -332,9 +411,15 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    transition: opacity .2s ease, transform .2s ease;
+    transition: opacity .2s ease, transform .2s ease, border-color .15s ease;
   }
+  .ticket:hover{ border-color: #333B52; }
   .ticket.removing{ opacity: 0; transform: scale(0.98); }
+  .ticket.just-in{ animation: slideIn .35s ease; }
+  @keyframes slideIn{
+    from{ opacity:0; transform: translateY(-8px); }
+    to{ opacity:1; transform:none; }
+  }
   .ticket__stub{
     width: 40px;
     flex-shrink:0;
@@ -365,7 +450,7 @@
   .ticket__body{ flex:1; padding: 14px 16px; min-width:0; }
   .ticket__meta{ display:flex; align-items:center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
   .ticket__id{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
-  .ticket__time{ font-size: 11px; color: var(--text-muted); }
+  .ticket__time{ font-size: 11px; color: var(--text-faint); }
   .ticket__desc{ font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: var(--text); word-break: break-word; }
   .ticket__thumb{
     max-width: 220px;
@@ -375,7 +460,9 @@
     margin-bottom: 10px;
     display:block;
     cursor: zoom-in;
+    transition: opacity .15s ease;
   }
+  .ticket__thumb:hover{ opacity: 0.85; }
   .ticket__footer{
     display:flex;
     align-items:center;
@@ -422,9 +509,44 @@
   .lightbox.show{ display:flex; }
   .lightbox img{ max-width:100%; max-height:100%; border-radius: 8px; }
 
+  /* ---------------- Toasts ---------------- */
+  .toast-stack{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 60;
+    display:flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    max-width: calc(100vw - 40px);
+  }
+  .toast{
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    width: 300px;
+    max-width: 100%;
+    box-shadow: var(--shadow-panel);
+    animation: toastIn .25s ease;
+    cursor: pointer;
+  }
+  .toast[data-p="urgent"]{ border-left-color: var(--urgent); }
+  .toast[data-p="high"]{ border-left-color: var(--high); }
+  .toast[data-p="medium"]{ border-left-color: var(--medium); }
+  .toast[data-p="low"]{ border-left-color: var(--low); }
+  .toast.leaving{ animation: toastOut .2s ease forwards; }
+  @keyframes toastIn{ from{ opacity:0; transform: translateX(16px);} to{ opacity:1; transform:none; } }
+  @keyframes toastOut{ from{ opacity:1; } to{ opacity:0; transform: translateX(16px); } }
+  .toast__title{ font-size: 12px; font-weight:700; color: var(--text-muted); font-family: var(--font-mono); text-transform:uppercase; letter-spacing:0.06em; margin-bottom: 4px; }
+  .toast__desc{ font-size: 13px; color: var(--text); line-height:1.4; }
+
   @media (max-width: 480px){
     .priority-picker{ grid-template-columns: repeat(2,1fr); }
     .shell{ padding: 20px 14px 60px; }
+    .toast-stack{ right: 12px; left: 12px; }
+    .toast{ width: auto; }
   }
 </style>
 
@@ -434,12 +556,18 @@
       <div class="brand__mark">BD</div>
       <div>
         <div class="brand__text">Bug Desk</div>
-        <div class="brand__sub" id="subline">flag it, we'll fix it</div>
+        <div class="brand__sub"><span class="live-dot" id="live-dot"></span><span id="subline">flag it, we'll fix it</span></div>
       </div>
     </div>
-    <div class="tabs" role="tablist">
-      <button class="tab" id="tab-submit" role="tab" aria-selected="true">Report a bug</button>
-      <button class="tab" id="tab-queue" role="tab" aria-selected="false">Queue</button>
+    <div class="header-actions">
+      <button class="bell-btn" id="bell-btn" title="Get notified of new tickets">🔔 Enable alerts</button>
+      <div class="tabs" role="tablist">
+        <button class="tab" id="tab-submit" role="tab" aria-selected="true">Report a bug</button>
+        <button class="tab" id="tab-queue" role="tab" aria-selected="false">
+          Queue
+          <span class="tab-badge" id="tab-badge" style="display:none;">0</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -496,6 +624,7 @@
     </div>
 
     <div class="panel success" id="success-panel" style="display:none;">
+      <div class="check-badge">✓</div>
       <div style="font-size:13px;color:var(--text-muted);font-family:var(--font-mono);">TICKET FILED</div>
       <div class="ticket-id" id="new-ticket-id">BD-0000</div>
       <p id="new-ticket-priority">Priority: Medium</p>
@@ -507,20 +636,24 @@
   <section class="view" id="view-queue">
     <div class="queue-head">
       <h1>The queue</h1>
-      <span class="queue-count" id="queue-count">0 open</span>
+      <div class="queue-meta">
+        <span class="queue-count" id="queue-count">0 open</span>
+        <span class="refresh-note" id="refresh-note"></span>
+      </div>
     </div>
     <div class="filters" id="filters">
-      <button class="filter-chip active" data-p="all">ALL</button>
-      <button class="filter-chip" data-p="urgent">URGENT</button>
-      <button class="filter-chip" data-p="high">HIGH</button>
-      <button class="filter-chip" data-p="medium">MEDIUM</button>
-      <button class="filter-chip" data-p="low">LOW</button>
+      <button class="filter-chip active" data-p="all">ALL <span class="count" id="count-all"></span></button>
+      <button class="filter-chip" data-p="urgent">URGENT <span class="count" id="count-urgent"></span></button>
+      <button class="filter-chip" data-p="high">HIGH <span class="count" id="count-high"></span></button>
+      <button class="filter-chip" data-p="medium">MEDIUM <span class="count" id="count-medium"></span></button>
+      <button class="filter-chip" data-p="low">LOW <span class="count" id="count-low"></span></button>
     </div>
     <div class="ticket-list" id="ticket-list"></div>
   </section>
 </div>
 
 <div class="lightbox" id="lightbox"><img id="lightbox-img" alt=""></div>
+<div class="toast-stack" id="toast-stack"></div>
 
 <script>
 (function(){
@@ -533,12 +666,14 @@
     "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY
   };
   const configured = CFG.SUPABASE_URL && !CFG.SUPABASE_URL.includes("YOUR_");
+  const ORIGINAL_TITLE = document.title;
 
   // ---------- Tabs ----------
   const tabSubmit = document.getElementById('tab-submit');
   const tabQueue = document.getElementById('tab-queue');
   const viewSubmit = document.getElementById('view-submit');
   const viewQueue = document.getElementById('view-queue');
+  const tabBadge = document.getElementById('tab-badge');
 
   function showView(name){
     const isQueue = name === 'queue';
@@ -546,12 +681,166 @@
     tabQueue.setAttribute('aria-selected', String(isQueue));
     viewSubmit.classList.toggle('active', !isQueue);
     viewQueue.classList.toggle('active', isQueue);
-    if(isQueue) loadTickets();
+    if(isQueue){
+      loadTickets();
+      unreadCount = 0;
+      updateBadge();
+    }
   }
   tabSubmit.addEventListener('click', () => showView('submit'));
   tabQueue.addEventListener('click', () => showView('queue'));
 
   if(window.location.hash === '#queue'){ showView('queue'); }
+
+  // ---------- Notification permission ----------
+  const bellBtn = document.getElementById('bell-btn');
+  function refreshBellState(){
+    if(!('Notification' in window)){
+      bellBtn.style.display = 'none';
+      return;
+    }
+    if(Notification.permission === 'granted'){
+      bellBtn.textContent = '🔔 Alerts on';
+      bellBtn.classList.add('enabled');
+    } else if(Notification.permission === 'denied'){
+      bellBtn.textContent = '🔕 Blocked in browser';
+      bellBtn.classList.remove('enabled');
+    } else {
+      bellBtn.textContent = '🔔 Enable alerts';
+      bellBtn.classList.remove('enabled');
+    }
+  }
+  bellBtn.addEventListener('click', () => {
+    if(!('Notification' in window)) return;
+    if(Notification.permission === 'default'){
+      Notification.requestPermission().then(refreshBellState);
+    }
+  });
+  refreshBellState();
+
+  // ---------- Sound alert (no audio file needed) ----------
+  function playBeep(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    }catch(e){ /* audio not available, fail silently */ }
+  }
+
+  // ---------- Tab title flash while hidden ----------
+  let flashTimer = null;
+  function startFlash(){
+    if(flashTimer) return;
+    let on = false;
+    flashTimer = setInterval(() => {
+      document.title = on ? ORIGINAL_TITLE : '🔴 New ticket! — Bug Desk';
+      on = !on;
+    }, 1200);
+  }
+  function stopFlash(){
+    if(flashTimer){ clearInterval(flashTimer); flashTimer = null; }
+    document.title = ORIGINAL_TITLE;
+  }
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden) stopFlash();
+  });
+
+  // ---------- Toasts ----------
+  const toastStack = document.getElementById('toast-stack');
+  function showToast(ticket){
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.dataset.p = ticket.priority;
+    el.innerHTML = `
+      <div class="toast__title">New ${ticket.priority} ticket</div>
+      <div class="toast__desc">${escapeHtml(ticket.description).slice(0,120)}</div>
+    `;
+    el.addEventListener('click', () => {
+      showView('queue');
+      el.remove();
+    });
+    toastStack.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('leaving');
+      setTimeout(() => el.remove(), 220);
+    }, 6000);
+  }
+
+  // ---------- Unread badge ----------
+  let unreadCount = 0;
+  function updateBadge(){
+    if(unreadCount > 0){
+      tabBadge.style.display = 'flex';
+      tabBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+    } else {
+      tabBadge.style.display = 'none';
+    }
+  }
+
+  // ---------- New-ticket alert pipeline ----------
+  let knownIds = null; // null = not yet initialized (first poll just baselines, no alerts)
+
+  function handleNewTickets(fresh){
+    if(fresh.length === 0) return;
+    fresh.forEach(t => {
+      showToast(t);
+      const notifPermitted = ('Notification' in window) && Notification.permission === 'granted';
+      if(notifPermitted){
+        try{
+          const n = new Notification('Bug Desk — new ' + t.priority + ' ticket', {
+            body: t.description.slice(0, 140)
+          });
+          n.onclick = () => { window.focus(); showView('queue'); n.close(); };
+        }catch(e){}
+      }
+    });
+    playBeep();
+    if(document.hidden) startFlash();
+    if(!viewQueue.classList.contains('active')){
+      unreadCount += fresh.length;
+      updateBadge();
+    }
+  }
+
+  // ---------- Polling ----------
+  const POLL_MS = 15000;
+  const refreshNote = document.getElementById('refresh-note');
+
+  async function poll(){
+    if(!configured) return;
+    try{
+      const res = await fetch(REST + '?select=*&order=created_at.desc', { headers });
+      if(!res.ok) return;
+      const data = await res.json();
+
+      if(knownIds === null){
+        knownIds = new Set(data.map(t => t.id));
+      } else {
+        const fresh = data.filter(t => !knownIds.has(t.id));
+        fresh.forEach(t => knownIds.add(t.id));
+        if(fresh.length){
+          handleNewTickets(fresh);
+        }
+      }
+
+      allTickets = data;
+      if(viewQueue.classList.contains('active')){
+        render();
+        refreshNote.textContent = 'updated just now';
+      }
+    }catch(e){ /* network hiccup, next poll will retry */ }
+  }
+  setInterval(poll, POLL_MS);
+  poll(); // baseline immediately on load
 
   // ---------- Submit form ----------
   const form = document.getElementById('bug-form');
@@ -676,6 +965,10 @@
       if(!insertRes.ok) throw new Error('Could not file ticket');
       const [created] = await insertRes.json();
 
+      // let the poller pick this up naturally on its next tick,
+      // but mark it known now so the reporter doesn't get a toast for their own ticket
+      if(knownIds) knownIds.add(created.id);
+
       document.getElementById('submit-panel').style.display = 'none';
       document.getElementById('success-panel').style.display = 'block';
       document.getElementById('new-ticket-id').textContent = ticketId(created);
@@ -722,7 +1015,9 @@
       queueCount.textContent = '';
       return;
     }
-    ticketList.innerHTML = '<div class="empty">Loading…</div>';
+    if(allTickets.length === 0){
+      ticketList.innerHTML = '<div class="empty">Loading…</div>';
+    }
     try{
       const res = await fetch(REST + '?select=*&order=created_at.desc', { headers });
       if(!res.ok) throw new Error('fetch failed');
@@ -733,7 +1028,18 @@
     }
   }
 
+  function updateCounts(){
+    const counts = { urgent:0, high:0, medium:0, low:0 };
+    allTickets.forEach(t => { if(counts[t.priority] !== undefined) counts[t.priority]++; });
+    document.getElementById('count-all').textContent = allTickets.length || '';
+    document.getElementById('count-urgent').textContent = counts.urgent || '';
+    document.getElementById('count-high').textContent = counts.high || '';
+    document.getElementById('count-medium').textContent = counts.medium || '';
+    document.getElementById('count-low').textContent = counts.low || '';
+  }
+
   function render(){
+    updateCounts();
     let list = allTickets.filter(t => activeFilter === 'all' || t.priority === activeFilter);
     list.sort((a,b) => (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9) || new Date(b.created_at) - new Date(a.created_at));
 
@@ -786,7 +1092,6 @@
     }catch(err){}
   });
 
-  // Delete requires a second click within 3s to confirm, no dialog needed.
   ticketList.addEventListener('click', async e => {
     const img = e.target.closest('.ticket__thumb');
     if(img){
@@ -826,6 +1131,7 @@
       }
 
       allTickets = allTickets.filter(t => t.id !== id);
+      if(knownIds) knownIds.delete(id);
       if(ticketEl){
         ticketEl.classList.add('removing');
         setTimeout(() => render(), 200);
@@ -860,6 +1166,7 @@
 
   if(!configured){
     document.getElementById('subline').textContent = 'not connected — see setup notes';
+    document.getElementById('live-dot').style.background = 'var(--text-faint)';
   }
 })();
 </script>
