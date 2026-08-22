@@ -286,20 +286,43 @@
   .dropzone .dz-label{ font-size: 13px; color: var(--text-muted); }
   .dropzone .dz-label strong{ color: var(--text); }
 
-  .preview-wrap{ display:none; margin-top: 12px; position: relative; }
-  .preview-wrap.show{ display:block; }
-  .preview-wrap img{ max-height: 180px; border-radius: 8px; border: 1px solid var(--border); display:block; }
-  .preview-wrap button{
-    position:absolute; top:8px; right:8px;
+  .preview-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .preview-item{
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .preview-item img{ width:100%; height:100%; object-fit: cover; display:block; }
+  .preview-item .kb-tag{
+    position:absolute;
+    bottom:4px; left:4px;
+    background: rgba(11,14,20,0.8);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+  .preview-item button{
+    position:absolute; top:5px; right:5px;
     background: rgba(11,14,20,0.85);
     border: 1px solid var(--border);
     color: var(--text);
-    width:26px; height:26px;
+    width:22px; height:22px;
     border-radius:50%;
     cursor:pointer;
-    font-size: 13px;
+    font-size: 12px;
     line-height:1;
   }
+  .preview-item.compressing{ display:flex; align-items:center; justify-content:center; color: var(--text-faint); font-size: 10px; }
 
   .submit-btn{
     width:100%;
@@ -452,17 +475,18 @@
   .ticket__id{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
   .ticket__time{ font-size: 11px; color: var(--text-faint); }
   .ticket__desc{ font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: var(--text); word-break: break-word; }
+  .ticket__gallery{ display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
   .ticket__thumb{
-    max-width: 220px;
-    max-height: 140px;
+    width: 108px;
+    height: 84px;
+    object-fit: cover;
     border-radius: 6px;
     border: 1px solid var(--border);
-    margin-bottom: 10px;
     display:block;
     cursor: zoom-in;
-    transition: opacity .15s ease;
+    transition: opacity .15s ease, transform .15s ease;
   }
-  .ticket__thumb:hover{ opacity: 0.85; }
+  .ticket__thumb:hover{ opacity: 0.88; transform: translateY(-1px); }
   .ticket__footer{
     display:flex;
     align-items:center;
@@ -486,6 +510,144 @@
   }
   .delete-btn:hover{ border-color: var(--urgent); color: var(--urgent); background: var(--urgent-dim); }
   .delete-btn.confirming{ border-color: var(--urgent); color: #fff; background: var(--urgent); }
+
+  /* ---------------- Comment threads ---------------- */
+  .comment-toggle{
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    position: relative;
+    transition: all .15s ease;
+  }
+  .comment-toggle:hover{ border-color: var(--accent); color: var(--text); }
+  .comment-toggle .unread-dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background: var(--accent);
+    display:none;
+  }
+  .comment-toggle.has-unread .unread-dot{ display:inline-block; }
+
+  .comment-thread{
+    display:none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .comment-thread.open{ display:block; animation: fadeIn .2s ease; }
+
+  .comment-list{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .comment-row{ display:flex; gap: 8px; }
+  .comment-avatar{
+    flex-shrink:0;
+    width: 26px; height:26px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color:#fff;
+  }
+  .comment-row[data-author="admin"] .comment-avatar{ background: linear-gradient(135deg, var(--accent), #3A5FC4); }
+  .comment-row[data-author="reporter"] .comment-avatar{ background: linear-gradient(135deg, #7C8AA3, #4B5570); }
+  .comment-bubble{
+    background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 8px 12px;
+    flex: 1;
+    min-width: 0;
+  }
+  .comment-bubble__meta{
+    display:flex;
+    align-items:baseline;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+  .comment-bubble__author{ font-size: 12px; font-weight: 700; color: var(--text); }
+  .comment-bubble__time{ font-size: 10px; color: var(--text-faint); }
+  .comment-bubble__msg{ font-size: 13px; line-height: 1.45; color: var(--text); word-break: break-word; }
+
+  .comment-empty{ font-size: 12px; color: var(--text-faint); margin-bottom: 12px; }
+
+  .comment-form{ display:flex; gap: 8px; }
+  .comment-form input{
+    flex:1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+  .comment-form input:focus-visible{ outline: 2px solid var(--accent); outline-offset: 1px; }
+  .comment-form button{
+    background: var(--accent);
+    border:none;
+    color:#fff;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 0 16px;
+    border-radius: 8px;
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .comment-form button:hover{ background: #4A7AE0; }
+  .comment-form button:disabled{ opacity: 0.5; cursor: default; }
+
+  .ticket.fixed{
+    border-color: rgba(52,211,153,0.3);
+    background: linear-gradient(180deg, rgba(52,211,153,0.06), var(--surface));
+  }
+  .ticket.fixed .ticket__stub{
+    background: var(--success) !important;
+  }
+  .fixed-pill{
+    display:inline-flex;
+    align-items:center;
+    gap: 4px;
+    background: rgba(52,211,153,0.14);
+    color: var(--success);
+    border: 1px solid rgba(52,211,153,0.35);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap: 4px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 
   .empty{
     text-align:center;
@@ -563,6 +725,10 @@
       <button class="bell-btn" id="bell-btn" title="Get notified of new tickets">🔔 Enable alerts</button>
       <div class="tabs" role="tablist">
         <button class="tab" id="tab-submit" role="tab" aria-selected="true">Report a bug</button>
+        <button class="tab" id="tab-mine" role="tab" aria-selected="false">
+          My tickets
+          <span class="tab-badge" id="mine-badge" style="display:none;">0</span>
+        </button>
         <button class="tab" id="tab-queue" role="tab" aria-selected="false">
           Queue
           <span class="tab-badge" id="tab-badge" style="display:none;">0</span>
@@ -578,6 +744,11 @@
       <p class="lede">Drop a screenshot and a quick description. Mark it Urgent only if it's actually blocking something right now.</p>
 
       <form id="bug-form">
+        <div class="field">
+          <label for="reporter-name">Your name <span style="text-transform:none;font-weight:400;">(optional, lets you find this ticket later)</span></label>
+          <input type="text" id="reporter-name" placeholder="e.g. Priya" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:11px 14px;">
+        </div>
+
         <div class="field">
           <label for="desc">What's happening</label>
           <textarea id="desc" placeholder="e.g. Checkout button does nothing on mobile Safari" required></textarea>
@@ -606,15 +777,12 @@
         </div>
 
         <div class="field">
-          <label>Screenshot</label>
+          <label>Screenshots <span style="text-transform:none;font-weight:400;">(up to 4)</span></label>
           <div class="dropzone" id="dropzone">
-            <input type="file" id="file-input" accept="image/*">
-            <div class="dz-label" id="dz-label"><strong>Click to upload</strong> or drag an image here</div>
+            <input type="file" id="file-input" accept="image/*" multiple>
+            <div class="dz-label" id="dz-label"><strong>Click to upload</strong> or drag images here</div>
           </div>
-          <div class="preview-wrap" id="preview-wrap">
-            <img id="preview-img" alt="Screenshot preview">
-            <button type="button" id="remove-img" aria-label="Remove image">✕</button>
-          </div>
+          <div class="preview-grid" id="preview-grid"></div>
         </div>
 
         <div class="err" id="form-err"></div>
@@ -630,6 +798,15 @@
       <p id="new-ticket-priority">Priority: Medium</p>
       <button class="again" id="file-another">File another</button>
     </div>
+  </section>
+
+  <!-- MY TICKETS VIEW -->
+  <section class="view" id="view-mine">
+    <div class="queue-head">
+      <h1>Your tickets</h1>
+      <span class="queue-count" id="mine-count"></span>
+    </div>
+    <div class="ticket-list" id="mine-ticket-list"></div>
   </section>
 
   <!-- QUEUE VIEW -->
@@ -661,6 +838,7 @@
   const REST = CFG.SUPABASE_URL + "/rest/v1/bugs";
   const STORAGE = CFG.SUPABASE_URL + "/storage/v1/object/screenshots/";
   const STORAGE_PUBLIC = CFG.SUPABASE_URL + "/storage/v1/object/public/screenshots/";
+  const COMMENTS_REST = CFG.SUPABASE_URL + "/rest/v1/comments";
   const headers = {
     "apikey": CFG.SUPABASE_ANON_KEY,
     "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY
@@ -670,27 +848,51 @@
 
   // ---------- Tabs ----------
   const tabSubmit = document.getElementById('tab-submit');
+  const tabMine = document.getElementById('tab-mine');
   const tabQueue = document.getElementById('tab-queue');
   const viewSubmit = document.getElementById('view-submit');
+  const viewMine = document.getElementById('view-mine');
   const viewQueue = document.getElementById('view-queue');
   const tabBadge = document.getElementById('tab-badge');
 
   function showView(name){
-    const isQueue = name === 'queue';
-    tabSubmit.setAttribute('aria-selected', String(!isQueue));
-    tabQueue.setAttribute('aria-selected', String(isQueue));
-    viewSubmit.classList.toggle('active', !isQueue);
-    viewQueue.classList.toggle('active', isQueue);
-    if(isQueue){
+    tabSubmit.setAttribute('aria-selected', String(name === 'submit'));
+    tabMine.setAttribute('aria-selected', String(name === 'mine'));
+    tabQueue.setAttribute('aria-selected', String(name === 'queue'));
+    viewSubmit.classList.toggle('active', name === 'submit');
+    viewMine.classList.toggle('active', name === 'mine');
+    viewQueue.classList.toggle('active', name === 'queue');
+    if(name === 'queue'){
       loadTickets();
       unreadCount = 0;
       updateBadge();
     }
+    if(name === 'mine'){
+      renderMine();
+      mineUnread = 0;
+      updateMineBadge();
+    }
   }
   tabSubmit.addEventListener('click', () => showView('submit'));
+  tabMine.addEventListener('click', () => showView('mine'));
   tabQueue.addEventListener('click', () => showView('queue'));
 
-  if(window.location.hash === '#queue'){ showView('queue'); }
+  // NOTE: hash-based view switch (#queue / #mine) happens at the very end of
+  // this script, once all state below has been initialized — see bottom.
+
+  // ---------- Anonymous reporter identity ----------
+  // No login for reporters, so we keep a random ID in this browser's
+  // localStorage — same pattern support tools like Zendesk/Canny use for
+  // "guest" ticket tracking. It only works on the same browser/device.
+  function getReporterId(){
+    let id = localStorage.getItem('bugdesk_reporter_id');
+    if(!id){
+      id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2)));
+      localStorage.setItem('bugdesk_reporter_id', id);
+    }
+    return id;
+  }
+  const REPORTER_ID = getReporterId();
 
   // ---------- Notification permission ----------
   const bellBtn = document.getElementById('bell-btn');
@@ -786,6 +988,17 @@
     }
   }
 
+  let mineUnread = 0;
+  const mineBadge = document.getElementById('mine-badge');
+  function updateMineBadge(){
+    if(mineUnread > 0){
+      mineBadge.style.display = 'flex';
+      mineBadge.textContent = mineUnread > 9 ? '9+' : String(mineUnread);
+    } else {
+      mineBadge.style.display = 'none';
+    }
+  }
+
   // ---------- New-ticket alert pipeline ----------
   let knownIds = null; // null = not yet initialized (first poll just baselines, no alerts)
 
@@ -811,6 +1024,113 @@
     }
   }
 
+  // ---------- Comments ----------
+  let commentsByBug = {}; // bugId -> array of comments, oldest first
+  let knownCommentIds = null; // for new-comment detection, same pattern as knownIds
+  const SEEN_KEY = 'bugdesk_seen_comments'; // { [bugId]: count } persisted per browser
+
+  function getSeenMap(){
+    try{ return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); }catch(e){ return {}; }
+  }
+  function markSeen(bugId, count){
+    const map = getSeenMap();
+    map[bugId] = count;
+    localStorage.setItem(SEEN_KEY, JSON.stringify(map));
+  }
+
+  async function fetchComments(){
+    if(!configured) return;
+    try{
+      const res = await fetch(COMMENTS_REST + '?select=*&order=created_at.asc', { headers });
+      if(!res.ok) return;
+      const data = await res.json();
+      const grouped = {};
+      data.forEach(c => {
+        if(!grouped[c.bug_id]) grouped[c.bug_id] = [];
+        grouped[c.bug_id].push(c);
+      });
+
+      if(knownCommentIds === null){
+        knownCommentIds = new Set(data.map(c => c.id));
+      } else {
+        const freshComments = data.filter(c => !knownCommentIds.has(c.id));
+        freshComments.forEach(c => knownCommentIds.add(c.id));
+        // If a reporter replies while we (admin) are away from the queue tab, badge it.
+        const newReporterReplies = freshComments.filter(c => c.author_type === 'reporter');
+        if(newReporterReplies.length && !viewQueue.classList.contains('active')){
+          unreadCount += newReporterReplies.length;
+          updateBadge();
+          playBeep();
+        }
+        // If admin replies to one of "my" tickets while I'm elsewhere, badge My Tickets.
+        const newAdminReplies = freshComments.filter(c => {
+          if(c.author_type !== 'admin') return false;
+          const bug = allTickets.find(t => t.id === c.bug_id);
+          return bug && bug.reporter_id === REPORTER_ID;
+        });
+        if(newAdminReplies.length && !viewMine.classList.contains('active')){
+          mineUnread += newAdminReplies.length;
+          updateMineBadge();
+        }
+      }
+      commentsByBug = grouped;
+    }catch(e){ /* next poll retries */ }
+  }
+
+  async function postComment(bugId, message, authorType, authorName){
+    const payload = {
+      bug_id: bugId,
+      author_type: authorType,
+      author_name: authorName || (authorType === 'admin' ? 'Bug Desk team' : 'You'),
+      message
+    };
+    const res = await fetch(COMMENTS_REST, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('Could not send comment');
+    const [created] = await res.json();
+    if(!commentsByBug[bugId]) commentsByBug[bugId] = [];
+    commentsByBug[bugId].push(created);
+    if(knownCommentIds) knownCommentIds.add(created.id);
+    return created;
+  }
+
+  function commentThreadHtml(bugId){
+    const comments = commentsByBug[bugId] || [];
+    const listHtml = comments.length
+      ? comments.map(c => `
+          <div class="comment-row" data-author="${c.author_type}">
+            <div class="comment-avatar">${c.author_type === 'admin' ? 'BD' : (c.author_name || 'R').slice(0,2).toUpperCase()}</div>
+            <div class="comment-bubble">
+              <div class="comment-bubble__meta">
+                <span class="comment-bubble__author">${escapeHtml(c.author_name || (c.author_type === 'admin' ? 'Bug Desk team' : 'Reporter'))}</span>
+                <span class="comment-bubble__time">${timeAgo(c.created_at)}</span>
+              </div>
+              <div class="comment-bubble__msg">${escapeHtml(c.message)}</div>
+            </div>
+          </div>
+        `).join('')
+      : '<div class="comment-empty">No comments yet — say something.</div>';
+
+    return `
+      <div class="comment-list">${listHtml}</div>
+      <form class="comment-form" data-bug-id="${bugId}">
+        <input type="text" placeholder="Write a comment…" maxlength="500" required>
+        <button type="submit">Send</button>
+      </form>
+    `;
+  }
+
+  function commentCountFor(bugId){
+    return (commentsByBug[bugId] || []).length;
+  }
+  function hasUnseenComments(bugId){
+    const seen = getSeenMap();
+    return commentCountFor(bugId) > (seen[bugId] || 0);
+  }
+
   // ---------- Polling ----------
   const POLL_MS = 15000;
   const refreshNote = document.getElementById('refresh-note');
@@ -833,9 +1153,14 @@
       }
 
       allTickets = data;
+      await fetchComments();
+
       if(viewQueue.classList.contains('active')){
         render();
         refreshNote.textContent = 'updated just now';
+      }
+      if(viewMine.classList.contains('active')){
+        renderMine();
       }
     }catch(e){ /* network hiccup, next poll will retry */ }
   }
@@ -846,13 +1171,12 @@
   const form = document.getElementById('bug-form');
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('file-input');
-  const previewWrap = document.getElementById('preview-wrap');
-  const previewImg = document.getElementById('preview-img');
-  const removeImgBtn = document.getElementById('remove-img');
+  const previewGrid = document.getElementById('preview-grid');
   const dzLabel = document.getElementById('dz-label');
   const formErr = document.getElementById('form-err');
   const submitBtn = document.getElementById('submit-btn');
-  let selectedFile = null;
+  const MAX_IMAGES = 4;
+  let selectedImages = []; // [{ blob, url, kbLabel }]
 
   dropzone.addEventListener('click', () => fileInput.click());
   dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
@@ -860,9 +1184,12 @@
   dropzone.addEventListener('drop', e => {
     e.preventDefault();
     dropzone.classList.remove('drag');
-    if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    handleFiles(Array.from(e.dataTransfer.files || []));
   });
-  fileInput.addEventListener('change', () => { if(fileInput.files[0]) handleFile(fileInput.files[0]); });
+  fileInput.addEventListener('change', () => {
+    handleFiles(Array.from(fileInput.files || []));
+    fileInput.value = ''; // allow re-selecting the same file later
+  });
 
   const MAX_DIM = 1600;
   const JPEG_QUALITY = 0.72;
@@ -896,35 +1223,69 @@
 
   function formatKB(bytes){ return Math.max(1, Math.round(bytes / 1024)) + ' KB'; }
 
-  async function handleFile(file){
-    if(!file.type.startsWith('image/')) return;
-    const originalSize = file.size;
-    dzLabel.innerHTML = '<strong>Compressing…</strong>';
-    try{
-      const compressed = await compressImage(file, MAX_DIM, JPEG_QUALITY);
-      selectedFile = compressed;
-      const url = URL.createObjectURL(compressed);
-      previewImg.src = url;
-      previewWrap.classList.add('show');
-      dzLabel.innerHTML = '<strong>' + formatKB(compressed.size) + '</strong> (was ' + formatKB(originalSize) + ') — ready to send';
-    }catch(err){
-      selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = e => {
-        previewImg.src = e.target.result;
-        previewWrap.classList.add('show');
-        dzLabel.innerHTML = '<strong>' + file.name + '</strong> selected';
-      };
-      reader.readAsDataURL(file);
+  function renderPreviewGrid(){
+    previewGrid.innerHTML = selectedImages.map((img, i) => `
+      <div class="preview-item">
+        <img src="${img.url}" alt="Screenshot ${i+1}">
+        ${img.kbLabel ? `<span class="kb-tag">${img.kbLabel}</span>` : ''}
+        <button type="button" data-idx="${i}" aria-label="Remove image">✕</button>
+      </div>
+    `).join('');
+    updateDzLabel();
+  }
+
+  function updateDzLabel(){
+    if(selectedImages.length === 0){
+      dzLabel.innerHTML = '<strong>Click to upload</strong> or drag images here';
+    } else if(selectedImages.length >= MAX_IMAGES){
+      dzLabel.innerHTML = '<strong>' + selectedImages.length + '/' + MAX_IMAGES + '</strong> — that\'s the max for one ticket';
+    } else {
+      dzLabel.innerHTML = '<strong>' + selectedImages.length + '</strong> selected — add up to ' + (MAX_IMAGES - selectedImages.length) + ' more';
     }
   }
 
-  removeImgBtn.addEventListener('click', () => {
-    selectedFile = null;
-    fileInput.value = '';
-    previewWrap.classList.remove('show');
-    dzLabel.innerHTML = '<strong>Click to upload</strong> or drag an image here';
+  previewGrid.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-idx]');
+    if(!btn) return;
+    const idx = Number(btn.dataset.idx);
+    selectedImages.splice(idx, 1);
+    renderPreviewGrid();
   });
+
+  async function handleFiles(files){
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+    if(imageFiles.length === 0) return;
+
+    const room = MAX_IMAGES - selectedImages.length;
+    if(room <= 0){
+      formErr.textContent = 'You can attach up to ' + MAX_IMAGES + ' images per ticket.';
+      formErr.classList.add('show');
+      return;
+    }
+    formErr.classList.remove('show');
+    const toProcess = imageFiles.slice(0, room);
+
+    for(const file of toProcess){
+      const placeholderIdx = selectedImages.length;
+      selectedImages.push({ blob: null, url: '', kbLabel: '…' });
+      renderPreviewGrid();
+      try{
+        const compressed = await compressImage(file, MAX_DIM, JPEG_QUALITY);
+        selectedImages[placeholderIdx] = {
+          blob: compressed,
+          url: URL.createObjectURL(compressed),
+          kbLabel: formatKB(compressed.size)
+        };
+      }catch(err){
+        selectedImages[placeholderIdx] = {
+          blob: file,
+          url: URL.createObjectURL(file),
+          kbLabel: formatKB(file.size)
+        };
+      }
+      renderPreviewGrid();
+    }
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -937,6 +1298,7 @@
     }
 
     const desc = document.getElementById('desc').value.trim();
+    const reporterName = document.getElementById('reporter-name').value.trim();
     const priority = form.querySelector('input[name="priority"]:checked').value;
     if(!desc){ return; }
 
@@ -944,23 +1306,31 @@
     submitBtn.textContent = "Filing…";
 
     try{
-      let imageUrl = null;
-      if(selectedFile){
-        const ext = selectedFile.type === 'image/jpeg' ? 'jpg' : (selectedFile.name ? selectedFile.name.split('.').pop() : 'png');
+      const imageUrls = [];
+      for(const img of selectedImages){
+        if(!img.blob) continue; // skip any still-compressing placeholder, shouldn't happen at submit time
+        const ext = img.blob.type === 'image/jpeg' ? 'jpg' : 'png';
         const fname = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
         const uploadRes = await fetch(STORAGE + fname, {
           method: 'POST',
-          headers: { ...headers, 'Content-Type': selectedFile.type || 'image/jpeg' },
-          body: selectedFile
+          headers: { ...headers, 'Content-Type': img.blob.type || 'image/jpeg' },
+          body: img.blob
         });
         if(!uploadRes.ok) throw new Error('Image upload failed');
-        imageUrl = STORAGE_PUBLIC + fname;
+        imageUrls.push(STORAGE_PUBLIC + fname);
       }
 
       const insertRes = await fetch(REST, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        body: JSON.stringify({ description: desc, priority, image_url: imageUrl })
+        body: JSON.stringify({
+          description: desc,
+          priority,
+          image_url: imageUrls[0] || null,
+          image_urls: imageUrls,
+          reporter_id: REPORTER_ID,
+          reporter_name: reporterName || null
+        })
       });
       if(!insertRes.ok) throw new Error('Could not file ticket');
       const [created] = await insertRes.json();
@@ -985,9 +1355,8 @@
 
   document.getElementById('file-another').addEventListener('click', () => {
     form.reset();
-    selectedFile = null;
-    previewWrap.classList.remove('show');
-    dzLabel.innerHTML = '<strong>Click to upload</strong> or drag an image here';
+    selectedImages = [];
+    renderPreviewGrid();
     document.getElementById('submit-panel').style.display = 'block';
     document.getElementById('success-panel').style.display = 'none';
   });
@@ -1038,6 +1407,21 @@
     document.getElementById('count-low').textContent = counts.low || '';
   }
 
+  // Tracks which tickets have their comment thread expanded, per view.
+  const openThreads = new Set();
+
+  function imagesFor(t){
+    if(Array.isArray(t.image_urls) && t.image_urls.length) return t.image_urls;
+    if(t.image_url) return [t.image_url];
+    return [];
+  }
+
+  function galleryHtml(t){
+    const imgs = imagesFor(t);
+    if(!imgs.length) return '';
+    return `<div class="ticket__gallery">${imgs.map(url => `<img class="ticket__thumb" src="${url}" data-full="${url}" alt="Screenshot">`).join('')}</div>`;
+  }
+
   function render(){
     updateCounts();
     let list = allTickets.filter(t => activeFilter === 'all' || t.priority === activeFilter);
@@ -1052,15 +1436,16 @@
     }
 
     ticketList.innerHTML = list.map(t => `
-      <div class="ticket" data-p="${t.priority}" data-id="${t.id}">
+      <div class="ticket ${t.status === 'fixed' ? 'fixed' : ''}" data-p="${t.priority}" data-id="${t.id}">
         <div class="ticket__stub">${t.priority.toUpperCase()}</div>
         <div class="ticket__body">
           <div class="ticket__meta">
             <span class="ticket__id">${ticketId(t)}</span>
             <span class="ticket__time">${timeAgo(t.created_at)}</span>
+            ${t.reporter_name ? `<span class="ticket__time">· ${escapeHtml(t.reporter_name)}</span>` : ''}
           </div>
           <p class="ticket__desc">${escapeHtml(t.description)}</p>
-          ${t.image_url ? `<img class="ticket__thumb" src="${t.image_url}" data-full="${t.image_url}" alt="Screenshot">` : ''}
+          ${galleryHtml(t)}
           <div class="ticket__footer">
             <select class="status-select" data-id="${t.id}">
               <option value="new" ${t.status==='new'?'selected':''}>New</option>
@@ -1068,13 +1453,101 @@
               <option value="fixed" ${t.status==='fixed'?'selected':''}>Fixed</option>
             </select>
             <div class="ticket__actions">
-              <button type="button" class="delete-btn" data-id="${t.id}" data-image="${t.image_url || ''}">Delete</button>
+              <button type="button" class="comment-toggle ${hasUnseenComments(t.id) ? 'has-unread' : ''}" data-id="${t.id}">
+                💬 ${commentCountFor(t.id) || ''} <span class="unread-dot"></span>
+              </button>
+              <button type="button" class="delete-btn" data-id="${t.id}" data-images='${JSON.stringify(imagesFor(t))}'>Delete</button>
             </div>
+          </div>
+          <div class="comment-thread ${openThreads.has('q-' + t.id) ? 'open' : ''}" data-thread-for="${t.id}">
+            ${openThreads.has('q-' + t.id) ? commentThreadHtml(t.id) : ''}
           </div>
         </div>
       </div>
     `).join('');
   }
+
+  // ---------- My tickets (reporter-facing, read-only) ----------
+  const mineList = document.getElementById('mine-ticket-list');
+  const mineCount = document.getElementById('mine-count');
+
+  function renderMine(){
+    const mine = allTickets
+      .filter(t => t.reporter_id === REPORTER_ID)
+      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    mineCount.textContent = mine.length ? mine.length + ' filed from this browser' : '';
+
+    if(mine.length === 0){
+      mineList.innerHTML = '<div class="empty"><strong>No tickets yet</strong>Tickets you file from this browser will show up here — including once they\'re marked fixed.</div>';
+      return;
+    }
+
+    mineList.innerHTML = mine.map(t => `
+      <div class="ticket ${t.status === 'fixed' ? 'fixed' : ''}" data-p="${t.priority}" data-id="${t.id}">
+        <div class="ticket__stub">${t.priority.toUpperCase()}</div>
+        <div class="ticket__body">
+          <div class="ticket__meta">
+            <span class="ticket__id">${ticketId(t)}</span>
+            <span class="ticket__time">${timeAgo(t.created_at)}</span>
+          </div>
+          <p class="ticket__desc">${escapeHtml(t.description)}</p>
+          ${galleryHtml(t)}
+          <div class="ticket__footer">
+            ${t.status === 'fixed'
+              ? '<span class="fixed-pill">✓ Fixed</span>'
+              : `<span class="status-pill">${t.status === 'in_progress' ? 'In progress' : 'New'}</span>`}
+            <button type="button" class="comment-toggle ${hasUnseenComments(t.id) ? 'has-unread' : ''}" data-id="${t.id}">
+              💬 ${commentCountFor(t.id) || ''} <span class="unread-dot"></span>
+            </button>
+          </div>
+          <div class="comment-thread ${openThreads.has('m-' + t.id) ? 'open' : ''}" data-thread-for="${t.id}">
+            ${openThreads.has('m-' + t.id) ? commentThreadHtml(t.id) : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  mineList.addEventListener('click', e => {
+    const toggle = e.target.closest('.comment-toggle');
+    if(!toggle) return;
+    const id = toggle.dataset.id;
+    const key = 'm-' + id;
+    if(openThreads.has(key)) openThreads.delete(key);
+    else{
+      openThreads.add(key);
+      markSeen(id, commentCountFor(id));
+    }
+    renderMine();
+  });
+
+  mineList.addEventListener('submit', async e => {
+    const form = e.target.closest('.comment-form');
+    if(!form) return;
+    e.preventDefault();
+    const bugId = form.dataset.bugId;
+    const input = form.querySelector('input');
+    const msg = input.value.trim();
+    if(!msg) return;
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    const nameGuess = (allTickets.find(t => t.id === bugId) || {}).reporter_name || 'You';
+    try{
+      await postComment(bugId, msg, 'reporter', nameGuess);
+      markSeen(bugId, commentCountFor(bugId));
+      renderMine();
+    }catch(err){
+      btn.disabled = false;
+    }
+  });
+
+  mineList.addEventListener('click', e => {
+    const img = e.target.closest('.ticket__thumb');
+    if(!img) return;
+    document.getElementById('lightbox-img').src = img.dataset.full;
+    document.getElementById('lightbox').classList.add('show');
+  });
 
   ticketList.addEventListener('change', async e => {
     if(!e.target.classList.contains('status-select')) return;
@@ -1115,7 +1588,8 @@
 
     clearTimeout(delBtn.dataset.confirmTimer);
     const id = delBtn.dataset.id;
-    const imageUrl = delBtn.dataset.image;
+    let imageUrls = [];
+    try{ imageUrls = JSON.parse(delBtn.dataset.images || '[]'); }catch(e){}
     const ticketEl = delBtn.closest('.ticket');
     delBtn.disabled = true;
     delBtn.textContent = 'Deleting…';
@@ -1132,7 +1606,7 @@
         throw new Error('Nothing was deleted — check the delete policy on the bugs table in Supabase');
       }
 
-      if(imageUrl){
+      for(const imageUrl of imageUrls){
         const fname = imageUrl.split('/screenshots/')[1];
         if(fname){
           await fetch(STORAGE + fname, { method: 'DELETE', headers }).catch(() => {});
@@ -1153,6 +1627,39 @@
       delBtn.textContent = 'Delete failed';
       setTimeout(() => { delBtn.textContent = 'Delete'; }, 2500);
       console.error('Bug Desk delete error:', err.message);
+    }
+  });
+
+  // Comment thread toggle + submit for the admin queue view
+  ticketList.addEventListener('click', e => {
+    const toggle = e.target.closest('.comment-toggle');
+    if(!toggle) return;
+    const id = toggle.dataset.id;
+    const key = 'q-' + id;
+    if(openThreads.has(key)) openThreads.delete(key);
+    else{
+      openThreads.add(key);
+      markSeen(id, commentCountFor(id));
+    }
+    render();
+  });
+
+  ticketList.addEventListener('submit', async e => {
+    const form = e.target.closest('.comment-form');
+    if(!form) return;
+    e.preventDefault();
+    const bugId = form.dataset.bugId;
+    const input = form.querySelector('input');
+    const msg = input.value.trim();
+    if(!msg) return;
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    try{
+      await postComment(bugId, msg, 'admin', 'Bug Desk team');
+      markSeen(bugId, commentCountFor(bugId));
+      render();
+    }catch(err){
+      btn.disabled = false;
     }
   });
 
@@ -1179,6 +1686,10 @@
     document.getElementById('subline').textContent = 'not connected — see setup notes';
     document.getElementById('live-dot').style.background = 'var(--text-faint)';
   }
+
+  // Safe to run now — every variable showView touches has been initialized above.
+  if(window.location.hash === '#queue'){ showView('queue'); }
+  if(window.location.hash === '#mine'){ showView('mine'); }
 })();
 </script>
 </body>
