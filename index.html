@@ -1121,7 +1121,16 @@
     delBtn.textContent = 'Deleting…';
 
     try{
-      await fetch(REST + '?id=eq.' + id, { method: 'DELETE', headers });
+      const delRes = await fetch(REST + '?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { ...headers, 'Prefer': 'return=representation' }
+      });
+      if(!delRes.ok) throw new Error('Delete request failed (' + delRes.status + ')');
+      const deletedRows = await delRes.json().catch(() => []);
+      if(!Array.isArray(deletedRows) || deletedRows.length === 0){
+        // Nothing was actually deleted server-side — almost always a missing RLS delete policy.
+        throw new Error('Nothing was deleted — check the delete policy on the bugs table in Supabase');
+      }
 
       if(imageUrl){
         const fname = imageUrl.split('/screenshots/')[1];
@@ -1141,7 +1150,9 @@
     }catch(err){
       delBtn.disabled = false;
       delBtn.classList.remove('confirming');
-      delBtn.textContent = 'Delete';
+      delBtn.textContent = 'Delete failed';
+      setTimeout(() => { delBtn.textContent = 'Delete'; }, 2500);
+      console.error('Bug Desk delete error:', err.message);
     }
   });
 
