@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   /* ============================================================
      CONFIG — fill these in with your Supabase project details.
@@ -147,6 +148,159 @@
   }
   .bell-btn:hover{ border-color: var(--accent); color: var(--text); }
   .bell-btn.enabled{ color: var(--success); border-color: var(--success); }
+
+  /* ---------------- Notification center ---------------- */
+  .notif-wrap{ position: relative; }
+  .notif-bell{
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 36px; height:36px;
+    border-radius: 50%;
+    cursor:pointer;
+    font-size: 15px;
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .15s ease;
+  }
+  .notif-bell:hover{ border-color: var(--accent); }
+  .notif-bell.has-urgent{ animation: bellShake 3s ease-in-out infinite; border-color: var(--urgent); }
+  @keyframes bellShake{
+    0%, 92%, 100%{ transform: rotate(0); }
+    93%{ transform: rotate(-12deg); }
+    94%{ transform: rotate(10deg); }
+    95%{ transform: rotate(-8deg); }
+    96%{ transform: rotate(6deg); }
+    97%{ transform: rotate(0); }
+  }
+  .notif-count{
+    position:absolute;
+    top:-4px; right:-4px;
+    background: var(--urgent);
+    color:#fff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight:700;
+    min-width: 17px; height:17px;
+    border-radius: 999px;
+    display:flex; align-items:center; justify-content:center;
+    padding: 0 3px;
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .notif-panel{
+    display:none;
+    position: absolute;
+    top: 44px;
+    right: 0;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-panel);
+    z-index: 40;
+    overflow: hidden;
+  }
+  .notif-panel.open{ display:block; animation: fadeIn .15s ease; }
+  .notif-panel__tabs{ display:flex; border-bottom: 1px solid var(--border); }
+  .notif-panel__tab{
+    flex:1;
+    background: transparent;
+    border:none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 11px 8px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    border-bottom: 2px solid transparent;
+  }
+  .notif-panel__tab.active{ color: var(--text); border-bottom-color: var(--accent); }
+  .notif-panel__tabcount{ font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
+  .notif-panel__list{ max-height: 380px; overflow-y: auto; }
+  .notif-item{
+    display:flex;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+    transition: background .12s ease;
+    position: relative;
+  }
+  .notif-item:hover{ background: var(--surface-3); }
+  .notif-item:last-child{ border-bottom: none; }
+  .notif-item .notif-dot{
+    flex-shrink:0;
+    width:8px; height:8px;
+    border-radius:50%;
+    background: var(--accent);
+    margin-top: 5px;
+  }
+  .notif-item.read .notif-dot{ background: transparent; }
+  .notif-item[data-type="new_urgent_bug"] .notif-dot,
+  .notif-item[data-type="reminder"] .notif-dot{ background: var(--urgent); }
+  .notif-item__body{ flex:1; min-width:0; }
+  .notif-item__type{ font-family: var(--font-mono); font-size: 10px; font-weight:700; letter-spacing:0.05em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+  .notif-item__msg{ font-size: 13px; color: var(--text); line-height:1.4; word-break: break-word; }
+  .notif-item__time{ font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+  .notif-empty{ padding: 30px 16px; text-align:center; color: var(--text-faint); font-size: 13px; }
+
+  .conn-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+  .conn-dot.live{ background: var(--success); animation: pulse 2s ease-in-out infinite; }
+  .conn-dot.polling{ background: var(--high); }
+
+  /* ---------------- Acknowledgement / escalation ---------------- */
+  .ack-btn{
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .ack-btn:hover{ background: var(--accent); }
+  .seen-pill{
+    display:inline-flex;
+    align-items:center;
+    gap: 4px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .waiting-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .waiting-badge::before{ content:"⏱"; font-size: 10px; }
+  .waiting-badge.level-1{ color: var(--high); border-color: var(--high); background: var(--high-dim); }
+  .waiting-badge.level-2, .waiting-badge.level-3{
+    color: var(--urgent); border-color: var(--urgent); background: var(--urgent-dim);
+    animation: waitingPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes waitingPulse{ 0%,100%{ box-shadow: 0 0 0 0 rgba(255,68,99,0.35); } 50%{ box-shadow: 0 0 0 4px rgba(255,68,99,0); } }
+  .ticket.unacked-urgent{ border-color: var(--urgent); box-shadow: 0 0 0 1px rgba(255,68,99,0.25); }
+  .filter-chip[data-p="attention"]{ border-color: var(--urgent); }
+  .filter-chip[data-p="attention"].active{ background: var(--urgent-dim); border-color: var(--urgent); color: #fff; }
 
   .tabs{
     display:flex;
@@ -722,6 +876,18 @@
       </div>
     </div>
     <div class="header-actions">
+      <div class="notif-wrap" id="notif-wrap">
+        <button class="notif-bell" id="notif-bell" title="Notifications" aria-haspopup="true" aria-expanded="false">
+          🔔<span class="notif-count" id="notif-count" style="display:none;">0</span>
+        </button>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-panel__tabs">
+            <button class="notif-panel__tab active" data-scope="team">Team <span id="notif-team-count" class="notif-panel__tabcount"></span></button>
+            <button class="notif-panel__tab" data-scope="mine">Mine <span id="notif-mine-count" class="notif-panel__tabcount"></span></button>
+          </div>
+          <div class="notif-panel__list" id="notif-list"></div>
+        </div>
+      </div>
       <button class="bell-btn" id="bell-btn" title="Get notified of new tickets">🔔 Enable alerts</button>
       <div class="tabs" role="tablist">
         <button class="tab" id="tab-submit" role="tab" aria-selected="true">Report a bug</button>
@@ -819,6 +985,7 @@
       </div>
     </div>
     <div class="filters" id="filters">
+      <button class="filter-chip" data-p="attention">⚡ NEEDS ATTENTION <span class="count" id="count-attention"></span></button>
       <button class="filter-chip active" data-p="all">ALL <span class="count" id="count-all"></span></button>
       <button class="filter-chip" data-p="urgent">URGENT <span class="count" id="count-urgent"></span></button>
       <button class="filter-chip" data-p="high">HIGH <span class="count" id="count-high"></span></button>
@@ -864,13 +1031,9 @@
     viewQueue.classList.toggle('active', name === 'queue');
     if(name === 'queue'){
       loadTickets();
-      unreadCount = 0;
-      updateBadge();
     }
     if(name === 'mine'){
       renderMine();
-      mineUnread = 0;
-      updateMineBadge();
     }
   }
   tabSubmit.addEventListener('click', () => showView('submit'));
@@ -956,18 +1119,31 @@
     if(!document.hidden) stopFlash();
   });
 
-  // ---------- Toasts ----------
+  // ---------- Toasts (supplementary — never the only record of a notification) ----------
   const toastStack = document.getElementById('toast-stack');
-  function showToast(ticket){
+  function toastTitle(n){
+    return ({
+      new_bug: 'New bug reported',
+      new_urgent_bug: 'New URGENT bug',
+      reporter_comment: 'Reporter replied',
+      admin_reply: 'Team replied',
+      status_change: 'Status changed',
+      ticket_fixed: 'Ticket fixed',
+      reminder: 'Still unacknowledged'
+    })[n.type] || 'Update';
+  }
+  function showToast(n){
+    const bug = allTickets.find(t => t.id === n.bug_id);
+    const priority = (bug && bug.priority) || (n.type === 'new_urgent_bug' || n.type === 'reminder' ? 'urgent' : 'medium');
     const el = document.createElement('div');
     el.className = 'toast';
-    el.dataset.p = ticket.priority;
+    el.dataset.p = priority;
     el.innerHTML = `
-      <div class="toast__title">New ${ticket.priority} ticket</div>
-      <div class="toast__desc">${escapeHtml(ticket.description).slice(0,120)}</div>
+      <div class="toast__title">${toastTitle(n)}</div>
+      <div class="toast__desc">${escapeHtml((n.message || '').slice(0,120))}</div>
     `;
     el.addEventListener('click', () => {
-      showView('queue');
+      openNotification(n);
       el.remove();
     });
     toastStack.appendChild(el);
@@ -977,66 +1153,207 @@
     }, 6000);
   }
 
-  // ---------- Unread badge ----------
-  let unreadCount = 0;
-  function updateBadge(){
-    if(unreadCount > 0){
-      tabBadge.style.display = 'flex';
-      tabBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
-    } else {
-      tabBadge.style.display = 'none';
-    }
-  }
+  // ---------- Notification center ----------
+  // The `notifications` table (populated by DB triggers on bug/comment insert,
+  // plus client-side escalation reminders — see below) is the single source
+  // of truth for unread state. Nothing here is zeroed just because a tab was
+  // opened; a notification is only marked read once its specific ticket or
+  // thread is actually opened (markNotificationById / markNotificationsRead).
+  const NOTIF_REST = CFG.SUPABASE_URL + "/rest/v1/notifications";
+  let adminNotifications = [];    // shared "team inbox" — recipient_type = admin, broadcast
+  let reporterNotifications = []; // this browser's own tickets — recipient_type = reporter
+  let knownNotifIds = null;       // baseline so we don't toast the entire history on first load
+  let notifScope = 'team';
 
-  let mineUnread = 0;
+  const notifBell = document.getElementById('notif-bell');
+  const notifCountEl = document.getElementById('notif-count');
+  const notifPanel = document.getElementById('notif-panel');
+  const notifList = document.getElementById('notif-list');
+  const notifWrap = document.getElementById('notif-wrap');
   const mineBadge = document.getElementById('mine-badge');
+
+  notifBell.addEventListener('click', () => {
+    const open = notifPanel.classList.toggle('open');
+    notifBell.setAttribute('aria-expanded', String(open));
+    if(open) renderNotifPanel();
+  });
+  document.addEventListener('click', e => {
+    if(!notifWrap.contains(e.target)) notifPanel.classList.remove('open');
+  });
+  notifPanel.querySelector('.notif-panel__tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.notif-panel__tab');
+    if(!btn) return;
+    notifScope = btn.dataset.scope;
+    [...notifPanel.querySelectorAll('.notif-panel__tab')].forEach(b => b.classList.toggle('active', b === btn));
+    renderNotifPanel();
+  });
+  notifList.addEventListener('click', e => {
+    const item = e.target.closest('.notif-item');
+    if(!item) return;
+    const list = notifScope === 'team' ? adminNotifications : reporterNotifications;
+    const n = list.find(x => x.id === item.dataset.id);
+    if(n) openNotification(n);
+    notifPanel.classList.remove('open');
+  });
+
+  function notifTypeLabel(type){
+    return ({
+      new_bug:'New bug', new_urgent_bug:'Urgent bug', reporter_comment:'Reporter reply',
+      admin_reply:'Team reply', status_change:'Status change', ticket_fixed:'Fixed', reminder:'Reminder'
+    })[type] || type;
+  }
+
+  function renderNotifPanel(){
+    document.getElementById('notif-team-count').textContent = adminNotifications.filter(n=>!n.is_read).length || '';
+    document.getElementById('notif-mine-count').textContent = reporterNotifications.filter(n=>!n.is_read).length || '';
+    const list = notifScope === 'team' ? adminNotifications : reporterNotifications;
+    if(!list.length){
+      notifList.innerHTML = '<div class="notif-empty">Nothing here yet.</div>';
+      return;
+    }
+    notifList.innerHTML = list.slice(0, 50).map(n => `
+      <div class="notif-item ${n.is_read ? 'read' : ''}" data-type="${n.type}" data-id="${n.id}">
+        <span class="notif-dot"></span>
+        <div class="notif-item__body">
+          <div class="notif-item__type">${notifTypeLabel(n.type)}${n.bug_id ? ' · ' + ticketId({id:n.bug_id}) : ''}</div>
+          <div class="notif-item__msg">${escapeHtml(n.message || '')}</div>
+          <div class="notif-item__time">${timeAgo(n.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateBadge(){
+    const count = adminNotifications.filter(n => !n.is_read).length;
+    tabBadge.style.display = count > 0 ? 'flex' : 'none';
+    if(count > 0) tabBadge.textContent = count > 9 ? '9+' : String(count);
+  }
   function updateMineBadge(){
-    if(mineUnread > 0){
-      mineBadge.style.display = 'flex';
-      mineBadge.textContent = mineUnread > 9 ? '9+' : String(mineUnread);
-    } else {
-      mineBadge.style.display = 'none';
+    const count = reporterNotifications.filter(n => !n.is_read).length;
+    mineBadge.style.display = count > 0 ? 'flex' : 'none';
+    if(count > 0) mineBadge.textContent = count > 9 ? '9+' : String(count);
+  }
+  function updateNotifBell(){
+    const total = adminNotifications.filter(n=>!n.is_read).length + reporterNotifications.filter(n=>!n.is_read).length;
+    notifCountEl.style.display = total > 0 ? 'flex' : 'none';
+    if(total > 0) notifCountEl.textContent = total > 9 ? '9+' : String(total);
+    const hasUrgent = adminNotifications.some(n => !n.is_read && (n.type === 'new_urgent_bug' || n.type === 'reminder'));
+    notifBell.classList.toggle('has-urgent', hasUrgent);
+  }
+
+  async function markNotificationById(id, scope){
+    const list = scope === 'reporter' ? reporterNotifications : adminNotifications;
+    const n = list.find(x => x.id === id);
+    if(!n || n.is_read) return;
+    n.is_read = true;
+    n.read_at = new Date().toISOString();
+    updateBadge(); updateMineBadge(); updateNotifBell();
+    try{
+      await fetch(NOTIF_REST + '?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: true, read_at: n.read_at })
+      });
+    }catch(e){}
+  }
+
+  // Marks every unread notification of a given type for a given bug as read —
+  // used when a comment thread is actually opened, so a glance at the Queue
+  // list (which never calls this) can never clear it by accident.
+  async function markNotificationsRead({ bugId, type, scope }){
+    const list = scope === 'reporter' ? reporterNotifications : adminNotifications;
+    const matches = list.filter(n => n.bug_id === bugId && n.type === type && !n.is_read);
+    if(!matches.length) return;
+    const nowIso = new Date().toISOString();
+    matches.forEach(n => { n.is_read = true; n.read_at = nowIso; });
+    updateBadge(); updateMineBadge(); updateNotifBell();
+    try{
+      await fetch(NOTIF_REST + '?id=in.(' + matches.map(n => n.id).join(',') + ')', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: true, read_at: nowIso })
+      });
+    }catch(e){}
+  }
+
+  function scrollToTicket(bugId){
+    const el = document.querySelector('.ticket[data-id="' + bugId + '"]');
+    if(el){
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.style.outline = '2px solid var(--accent)';
+      el.style.outlineOffset = '2px';
+      setTimeout(() => { el.style.outline = ''; }, 1600);
     }
   }
 
-  // ---------- New-ticket alert pipeline ----------
-  let knownIds = null; // null = not yet initialized (first poll just baselines, no alerts)
-
-  function handleNewTickets(fresh){
-    if(fresh.length === 0) return;
-    fresh.forEach(t => {
-      showToast(t);
-      const notifPermitted = ('Notification' in window) && Notification.permission === 'granted';
-      if(notifPermitted){
-        try{
-          const n = new Notification('Bug Desk — new ' + t.priority + ' ticket', {
-            body: t.description.slice(0, 140)
-          });
-          n.onclick = () => { window.focus(); showView('queue'); n.close(); };
-        }catch(e){}
+  // Clicking a toast, a browser notification, or a notification-panel item
+  // all funnel through here: mark read, jump to the exact view + ticket +
+  // thread, never just "the general Queue page".
+  async function openNotification(n){
+    await markNotificationById(n.id, n.recipient_type);
+    const goMine = n.recipient_type === 'reporter';
+    showView(goMine ? 'mine' : 'queue');
+    if(n.bug_id){
+      if(n.comment_id){
+        openThreads.add((goMine ? 'm-' : 'q-') + n.bug_id);
+        markNotificationsRead({ bugId: n.bug_id, type: n.type, scope: n.recipient_type });
       }
-    });
-    playBeep();
-    if(document.hidden) startFlash();
-    if(!viewQueue.classList.contains('active')){
-      unreadCount += fresh.length;
-      updateBadge();
+      setTimeout(() => {
+        goMine ? renderMine() : render();
+        scrollToTicket(n.bug_id);
+      }, 30);
     }
+  }
+
+  async function fetchNotifications(){
+    if(!configured) return;
+    try{
+      const [adminRes, reporterRes] = await Promise.all([
+        fetch(NOTIF_REST + '?select=*&recipient_type=eq.admin&order=created_at.desc&limit=80', { headers }),
+        fetch(NOTIF_REST + '?select=*&recipient_type=eq.reporter&recipient_id=eq.' + encodeURIComponent(REPORTER_ID) + '&order=created_at.desc&limit=80', { headers })
+      ]);
+      const adminData = adminRes.ok ? await adminRes.json() : [];
+      const reporterData = reporterRes.ok ? await reporterRes.json() : [];
+      const combined = adminData.concat(reporterData);
+
+      if(knownNotifIds === null){
+        knownNotifIds = new Set(combined.map(n => n.id));
+      } else {
+        const fresh = combined.filter(n => !knownNotifIds.has(n.id));
+        fresh.forEach(n => knownNotifIds.add(n.id));
+        if(fresh.length){
+          fresh.forEach(n => {
+            showToast(n);
+            const notifPermitted = ('Notification' in window) && Notification.permission === 'granted';
+            if(notifPermitted){
+              try{
+                const browserN = new Notification('Bug Desk — ' + toastTitle(n), { body: (n.message||'').slice(0,140) });
+                browserN.onclick = () => { window.focus(); openNotification(n); browserN.close(); };
+              }catch(e){}
+            }
+          });
+          playBeep();
+          if(document.hidden) startFlash();
+        }
+      }
+
+      adminNotifications = adminData;
+      reporterNotifications = reporterData;
+      updateBadge();
+      updateMineBadge();
+      updateNotifBell();
+      if(notifPanel.classList.contains('open')) renderNotifPanel();
+    }catch(e){ /* next poll/realtime tick retries */ }
   }
 
   // ---------- Comments ----------
   let commentsByBug = {}; // bugId -> array of comments, oldest first
-  let knownCommentIds = null; // for new-comment detection, same pattern as knownIds
-  const SEEN_KEY = 'bugdesk_seen_comments'; // { [bugId]: count } persisted per browser
+  let knownCommentIds = null; // baseline set so we don't re-toast history on first load
 
-  function getSeenMap(){
-    try{ return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); }catch(e){ return {}; }
-  }
-  function markSeen(bugId, count){
-    const map = getSeenMap();
-    map[bugId] = count;
-    localStorage.setItem(SEEN_KEY, JSON.stringify(map));
-  }
+  // Unread state for comment threads now comes from the shared `notifications`
+  // table (see fetchNotifications below), NOT localStorage — a reply seen on
+  // one office computer must show as seen everywhere. hasUnseenComments()
+  // and markNotificationsRead() are defined in the Notification center section.
 
   async function fetchComments(){
     if(!configured) return;
@@ -1049,29 +1366,10 @@
         if(!grouped[c.bug_id]) grouped[c.bug_id] = [];
         grouped[c.bug_id].push(c);
       });
-
       if(knownCommentIds === null){
         knownCommentIds = new Set(data.map(c => c.id));
       } else {
-        const freshComments = data.filter(c => !knownCommentIds.has(c.id));
-        freshComments.forEach(c => knownCommentIds.add(c.id));
-        // If a reporter replies while we (admin) are away from the queue tab, badge it.
-        const newReporterReplies = freshComments.filter(c => c.author_type === 'reporter');
-        if(newReporterReplies.length && !viewQueue.classList.contains('active')){
-          unreadCount += newReporterReplies.length;
-          updateBadge();
-          playBeep();
-        }
-        // If admin replies to one of "my" tickets while I'm elsewhere, badge My Tickets.
-        const newAdminReplies = freshComments.filter(c => {
-          if(c.author_type !== 'admin') return false;
-          const bug = allTickets.find(t => t.id === c.bug_id);
-          return bug && bug.reporter_id === REPORTER_ID;
-        });
-        if(newAdminReplies.length && !viewMine.classList.contains('active')){
-          mineUnread += newAdminReplies.length;
-          updateMineBadge();
-        }
+        data.forEach(c => knownCommentIds.add(c.id));
       }
       commentsByBug = grouped;
     }catch(e){ /* next poll retries */ }
@@ -1126,12 +1424,22 @@
   function commentCountFor(bugId){
     return (commentsByBug[bugId] || []).length;
   }
-  function hasUnseenComments(bugId){
-    const seen = getSeenMap();
-    return commentCountFor(bugId) > (seen[bugId] || 0);
+  // forAdmin=true checks the shared "team" inbox (queue view); false checks
+  // this reporter's own inbox (My Tickets view). Both read from the
+  // notifications table so state is consistent across every computer.
+  function hasUnseenComments(bugId, forAdmin){
+    if(forAdmin){
+      return adminNotifications.some(n => n.bug_id === bugId && n.type === 'reporter_comment' && !n.is_read);
+    }
+    return reporterNotifications.some(n => n.bug_id === bugId && n.type === 'admin_reply' && !n.is_read);
   }
 
-  // ---------- Polling ----------
+  // ---------- Polling (fallback — Realtime is primary, see below) ----------
+  // knownIds just baselines which bug ids exist so the submit/delete flows
+  // below can cheaply no-op; new-item ALERTING is entirely notifications-driven
+  // now (fetchNotifications), so a bug appearing here never fires a toast
+  // twice or duplicates what the DB trigger already recorded.
+  let knownIds = null;
   const POLL_MS = 15000;
   const refreshNote = document.getElementById('refresh-note');
 
@@ -1139,21 +1447,16 @@
     if(!configured) return;
     try{
       const res = await fetch(REST + '?select=*&order=created_at.desc', { headers });
-      if(!res.ok) return;
-      const data = await res.json();
-
-      if(knownIds === null){
-        knownIds = new Set(data.map(t => t.id));
-      } else {
-        const fresh = data.filter(t => !knownIds.has(t.id));
-        fresh.forEach(t => knownIds.add(t.id));
-        if(fresh.length){
-          handleNewTickets(fresh);
-        }
+      if(res.ok){
+        const data = await res.json();
+        if(knownIds === null) knownIds = new Set(data.map(t => t.id));
+        else data.forEach(t => knownIds.add(t.id));
+        allTickets = data;
       }
 
-      allTickets = data;
       await fetchComments();
+      await checkEscalations();
+      await fetchNotifications();
 
       if(viewQueue.classList.contains('active')){
         render();
@@ -1405,6 +1708,25 @@
     document.getElementById('count-high').textContent = counts.high || '';
     document.getElementById('count-medium').textContent = counts.medium || '';
     document.getElementById('count-low').textContent = counts.low || '';
+    document.getElementById('count-attention').textContent = allTickets.filter(needsAttention).length || '';
+  }
+
+  // "Needs Attention" = NEW/unacknowledged bugs, unread reporter replies,
+  // or anything urgent/high still sitting open. Sorted with the most
+  // pressing items first (see attentionRank below).
+  function needsAttention(t){
+    if(t.status === 'fixed') return false;
+    if(!t.acknowledged) return true;
+    if(hasUnseenComments(t.id, true)) return true;
+    return false;
+  }
+  function attentionRank(t){
+    const unread = hasUnseenComments(t.id, true);
+    if(t.priority === 'urgent' && !t.acknowledged) return 0;
+    if(t.priority === 'high' && !t.acknowledged) return 1;
+    if(unread) return 2;
+    if(!t.acknowledged) return 3;
+    return 4;
   }
 
   // Tracks which tickets have their comment thread expanded, per view.
@@ -1424,8 +1746,14 @@
 
   function render(){
     updateCounts();
-    let list = allTickets.filter(t => activeFilter === 'all' || t.priority === activeFilter);
-    list.sort((a,b) => (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9) || new Date(b.created_at) - new Date(a.created_at));
+    let list;
+    if(activeFilter === 'attention'){
+      list = allTickets.filter(needsAttention);
+      list.sort((a,b) => attentionRank(a) - attentionRank(b) || new Date(a.created_at) - new Date(b.created_at));
+    } else {
+      list = allTickets.filter(t => activeFilter === 'all' || t.priority === activeFilter);
+      list.sort((a,b) => (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9) || new Date(b.created_at) - new Date(a.created_at));
+    }
 
     const openCount = allTickets.filter(t => t.status !== 'fixed').length;
     queueCount.textContent = openCount + ' open';
@@ -1435,25 +1763,35 @@
       return;
     }
 
-    ticketList.innerHTML = list.map(t => `
-      <div class="ticket ${t.status === 'fixed' ? 'fixed' : ''}" data-p="${t.priority}" data-id="${t.id}">
+    ticketList.innerHTML = list.map(t => {
+      const unacked = !t.acknowledged && t.status !== 'fixed';
+      const urgentUnacked = unacked && (t.priority === 'urgent' || t.priority === 'high');
+      return `
+      <div class="ticket ${t.status === 'fixed' ? 'fixed' : ''} ${urgentUnacked ? 'unacked-urgent' : ''}" data-p="${t.priority}" data-id="${t.id}">
         <div class="ticket__stub">${t.priority.toUpperCase()}</div>
         <div class="ticket__body">
           <div class="ticket__meta">
             <span class="ticket__id">${ticketId(t)}</span>
             <span class="ticket__time">${timeAgo(t.created_at)}</span>
             ${t.reporter_name ? `<span class="ticket__time">· ${escapeHtml(t.reporter_name)}</span>` : ''}
+            ${unacked ? waitingBadgeHtml(t) : ''}
           </div>
           <p class="ticket__desc">${escapeHtml(t.description)}</p>
           ${galleryHtml(t)}
           <div class="ticket__footer">
-            <select class="status-select" data-id="${t.id}">
-              <option value="new" ${t.status==='new'?'selected':''}>New</option>
-              <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In progress</option>
-              <option value="fixed" ${t.status==='fixed'?'selected':''}>Fixed</option>
-            </select>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <select class="status-select" data-id="${t.id}">
+                <option value="new" ${t.status==='new'?'selected':''}>New</option>
+                <option value="acknowledged" ${t.status==='acknowledged'?'selected':''}>Acknowledged</option>
+                <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In progress</option>
+                <option value="fixed" ${t.status==='fixed'?'selected':''}>Fixed</option>
+              </select>
+              ${t.acknowledged
+                ? `<span class="seen-pill">👁 Seen by ${escapeHtml(t.acknowledged_by || 'someone')} · ${timeAgo(t.acknowledged_at)}</span>`
+                : `<button type="button" class="ack-btn" data-id="${t.id}">Acknowledge</button>`}
+            </div>
             <div class="ticket__actions">
-              <button type="button" class="comment-toggle ${hasUnseenComments(t.id) ? 'has-unread' : ''}" data-id="${t.id}">
+              <button type="button" class="comment-toggle ${hasUnseenComments(t.id, true) ? 'has-unread' : ''}" data-id="${t.id}">
                 💬 ${commentCountFor(t.id) || ''} <span class="unread-dot"></span>
               </button>
               <button type="button" class="delete-btn" data-id="${t.id}" data-images='${JSON.stringify(imagesFor(t))}'>Delete</button>
@@ -1464,7 +1802,71 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
+  }
+
+  // Age-based escalation label. Purely a display + reminder-trigger helper —
+  // the source of truth for "has this been reminded already" lives in
+  // bugs.last_reminder_level so multiple open browsers don't duplicate alerts.
+  function escalationLevel(t){
+    const ageMin = (Date.now() - new Date(t.created_at).getTime()) / 60000;
+    const thresholds = (t.priority === 'urgent')
+      ? [5, 15, 30, 60]
+      : (t.priority === 'high')
+        ? [15, 45, 90]
+        : [60, 180]; // medium/low still shown in Needs Attention, just no repeat alarms
+    let level = 0;
+    thresholds.forEach((min, i) => { if(ageMin >= min) level = i + 1; });
+    return { level, ageMin };
+  }
+
+  function waitingBadgeHtml(t){
+    const { level, ageMin } = escalationLevel(t);
+    const mins = Math.floor(ageMin);
+    const label = mins < 60 ? mins + 'm' : Math.floor(mins/60) + 'h ' + (mins%60) + 'm';
+    return `<span class="waiting-badge ${level > 0 ? 'level-' + Math.min(level,3) : ''}">${t.priority.toUpperCase()} · waiting ${label}</span>`;
+  }
+
+  // ---------- Escalation reminders (client-side fallback) ----------
+  // The robust version of this is a pg_cron + Edge Function running server-side
+  // regardless of whether anyone has the site open (see the setup notes at the
+  // end of this file). This fallback runs from whichever browser tab is open
+  // and notices a ticket has crossed a new reminder threshold; it writes
+  // bugs.last_reminder_level to the DB before inserting the notification, so
+  // if five office computers are open at once, only the first to notice a
+  // given level fires it — the others see the updated column and skip it.
+  async function checkEscalations(){
+    if(!configured) return;
+    const candidates = allTickets.filter(t =>
+      t.status !== 'fixed' && !t.acknowledged && (t.priority === 'urgent' || t.priority === 'high')
+    );
+    for(const t of candidates){
+      const { level } = escalationLevel(t);
+      const already = t.last_reminder_level || 0;
+      if(level <= already) continue;
+      try{
+        const patchRes = await fetch(REST + '?id=eq.' + t.id + '&last_reminder_level=eq.' + already, {
+          method: 'PATCH',
+          headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify({ last_reminder_level: level, last_reminder_at: new Date().toISOString() })
+        });
+        if(!patchRes.ok) continue;
+        const rows = await patchRes.json().catch(() => []);
+        if(!Array.isArray(rows) || rows.length === 0) continue; // another tab already claimed this level
+        t.last_reminder_level = level;
+        await fetch(NOTIF_REST, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipient_type: 'admin',
+            bug_id: t.id,
+            type: 'reminder',
+            message: t.priority.toUpperCase() + ' still unacknowledged — ' + t.description.slice(0,100)
+          })
+        });
+      }catch(e){ /* next poll retries */ }
+    }
   }
 
   // ---------- My tickets (reporter-facing, read-only) ----------
@@ -1496,8 +1898,11 @@
           <div class="ticket__footer">
             ${t.status === 'fixed'
               ? '<span class="fixed-pill">✓ Fixed</span>'
-              : `<span class="status-pill">${t.status === 'in_progress' ? 'In progress' : 'New'}</span>`}
-            <button type="button" class="comment-toggle ${hasUnseenComments(t.id) ? 'has-unread' : ''}" data-id="${t.id}">
+              : `<span class="status-pill">${
+                  t.status === 'in_progress' ? 'In progress' :
+                  t.status === 'acknowledged' ? 'Seen by the team' : 'New'
+                }</span>`}
+            <button type="button" class="comment-toggle ${hasUnseenComments(t.id, false) ? 'has-unread' : ''}" data-id="${t.id}">
               💬 ${commentCountFor(t.id) || ''} <span class="unread-dot"></span>
             </button>
           </div>
@@ -1517,7 +1922,7 @@
     if(openThreads.has(key)) openThreads.delete(key);
     else{
       openThreads.add(key);
-      markSeen(id, commentCountFor(id));
+      markNotificationsRead({ bugId: id, type: 'admin_reply', scope: 'reporter' });
     }
     renderMine();
   });
@@ -1535,7 +1940,6 @@
     const nameGuess = (allTickets.find(t => t.id === bugId) || {}).reporter_name || 'You';
     try{
       await postComment(bugId, msg, 'reporter', nameGuess);
-      markSeen(bugId, commentCountFor(bugId));
       renderMine();
     }catch(err){
       btn.disabled = false;
@@ -1553,23 +1957,73 @@
     if(!e.target.classList.contains('status-select')) return;
     const id = e.target.dataset.id;
     const status = e.target.value;
+    const t = allTickets.find(x => x.id === id);
+    const payload = { status };
+    // Moving a ticket past "new" implies someone is on it — record acknowledgement
+    // if it hasn't happened yet, so it stops resurfacing as unacknowledged.
+    if(status !== 'new' && t && !t.acknowledged){
+      payload.acknowledged = true;
+      payload.acknowledged_at = new Date().toISOString();
+      payload.acknowledged_by = getAdminName();
+    }
     try{
       await fetch(REST + '?id=eq.' + id, {
         method: 'PATCH',
         headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify(payload)
       });
-      const t = allTickets.find(x => x.id === id);
-      if(t) t.status = status;
+      if(t) Object.assign(t, payload);
       render();
     }catch(err){}
   });
+
+  function getAdminName(){
+    let name = localStorage.getItem('bugdesk_admin_name');
+    if(!name){
+      name = (window.prompt('Your name, for "Seen by" on tickets you acknowledge:') || '').trim() || 'Someone';
+      localStorage.setItem('bugdesk_admin_name', name);
+    }
+    return name;
+  }
 
   ticketList.addEventListener('click', async e => {
     const img = e.target.closest('.ticket__thumb');
     if(img){
       document.getElementById('lightbox-img').src = img.dataset.full;
       document.getElementById('lightbox').classList.add('show');
+      return;
+    }
+
+    const ackBtn = e.target.closest('.ack-btn');
+    if(ackBtn){
+      const id = ackBtn.dataset.id;
+      const name = getAdminName();
+      ackBtn.disabled = true;
+      ackBtn.textContent = 'Acknowledging…';
+      try{
+        const nowIso = new Date().toISOString();
+        await fetch(REST + '?id=eq.' + id, {
+          method: 'PATCH',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            acknowledged: true,
+            acknowledged_at: nowIso,
+            acknowledged_by: name,
+            status: 'acknowledged'
+          })
+        });
+        const t = allTickets.find(x => x.id === id);
+        if(t){
+          t.acknowledged = true;
+          t.acknowledged_at = nowIso;
+          t.acknowledged_by = name;
+          if(t.status === 'new') t.status = 'acknowledged';
+        }
+        render();
+      }catch(err){
+        ackBtn.disabled = false;
+        ackBtn.textContent = 'Acknowledge';
+      }
       return;
     }
 
@@ -1639,7 +2093,7 @@
     if(openThreads.has(key)) openThreads.delete(key);
     else{
       openThreads.add(key);
-      markSeen(id, commentCountFor(id));
+      markNotificationsRead({ bugId: id, type: 'reporter_comment', scope: 'admin' });
     }
     render();
   });
@@ -1656,7 +2110,6 @@
     btn.disabled = true;
     try{
       await postComment(bugId, msg, 'admin', 'Bug Desk team');
-      markSeen(bugId, commentCountFor(bugId));
       render();
     }catch(err){
       btn.disabled = false;
@@ -1685,6 +2138,38 @@
   if(!configured){
     document.getElementById('subline').textContent = 'not connected — see setup notes';
     document.getElementById('live-dot').style.background = 'var(--text-faint)';
+  }
+
+  // ---------- Realtime (primary path — polling above is the fallback) ----------
+  // While this tab is open, Postgres changes push here instantly instead of
+  // waiting up to 15s for the next poll. If the socket drops or Realtime
+  // isn't enabled on the project, polling keeps everything working — nothing
+  // silently stops updating, it just gets slower. See the deploy notes for
+  // what a true "notified while the site is fully closed" feature would need
+  // (Web Push + a service worker + a backend push sender — not this).
+  const sublineEl = document.getElementById('subline');
+  const liveDotEl = document.getElementById('live-dot');
+  function setConnStatus(status){
+    if(!configured) return;
+    if(status === 'live'){ liveDotEl.style.background = 'var(--success)'; sublineEl.textContent = 'live'; }
+    else if(status === 'polling'){ liveDotEl.style.background = 'var(--high)'; sublineEl.textContent = 'polling (realtime unavailable)'; }
+    else{ liveDotEl.style.background = 'var(--text-faint)'; sublineEl.textContent = 'connecting…'; }
+  }
+  if(configured && window.supabase){
+    try{
+      setConnStatus('connecting');
+      const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+      sb.channel('bugdesk-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bugs' }, () => { poll(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => { poll(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => { fetchNotifications(); })
+        .subscribe(status => {
+          if(status === 'SUBSCRIBED') setConnStatus('live');
+          else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') setConnStatus('polling');
+        });
+    }catch(e){ setConnStatus('polling'); }
+  } else if(configured){
+    setConnStatus('polling');
   }
 
   // Safe to run now — every variable showView touches has been initialized above.
